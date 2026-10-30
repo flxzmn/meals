@@ -1,0 +1,8 @@
+# Build the bundle with: python scripts/build_mcpb.py
+# The script packs an allowlist of runtime files from build/mcpb.
+# This file is only a safety net for a direct "mcpb pack" in the project root:
+# it keeps secrets and local state out, but cannot exclude .venv reliably.
+.env
+*.db
+**/*.db
+*.mcpb
