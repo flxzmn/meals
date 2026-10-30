@@ -66,8 +66,12 @@ keine Berechnung ohne Rezept.
 | Windows 11, Claude Desktop 4.29, System-Python ohne Pakete | bestanden | bestanden, `uv-runtime` 0.9.7 mit eigener `.venv` | angekommen | 4.358 kcal, 15 von 16 Zutaten |
 | macOS arm64 | bestanden | bestanden, `uv-runtime` 0.9.7 | angekommen | 4.358 kcal, 15 von 16 Zutaten |
 
-Offen: Nachtest der Korrekturen aus v0.12.1 in Claude Desktop (`RELEASE_TEST.md`, Schritte 16 und 17)
-und ein Rechner ganz ohne Python.
+Nachtest der Korrekturen aus v0.12.1 in Claude Desktop (`RELEASE_TEST.md`, Schritte 16 und 17,
+Windows 11): bestanden. `compare_nutrition` mit Chicken Handi und einer erfundenen Ersatzzutat ohne
+USDA-Treffer meldete zuerst `comparable: false` und `difference: null`. Nach dem Speichern der
+Etikettwerte (140 kcal pro 100 g) meldete es `comparable: true` und −900 kcal (−20,7 %).
+
+Offen: ein Rechner ganz ohne Python.
 
 ## Läufe
 

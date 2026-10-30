@@ -1,3 +1,4 @@
+from services.match_service import MatchService
 from services.nutrition_service import NutritionService
 from services.variant_service import VariantService
 from tests.test_substitutions import build_session, seed_recipe
@@ -100,3 +101,27 @@ async def test_complete_comparison_is_comparable():
     comparison = (await service_with_variant().compare_variants(["test-1-v1"]))["comparisons"][0]
     assert comparison["comparable"] is True
     assert comparison["partial_difference"] is None
+
+
+async def test_label_values_make_comparison_comparable():
+    session = build_session()
+    VariantService(session).save_variants([adapted(session)])
+    service = NutritionService(session)
+    service.usda = FakeUSDA(missing={"tempeh"})
+
+    before = (await service.compare_variants(["test-1-v1"]))["comparisons"][0]
+    assert before["comparable"] is False
+    assert before["difference"] is None
+
+    result = await MatchService(session).set_matches([{
+        "ingredient": "tempeh", "calories_per_100g": 190, "protein_per_100g": 19, "fat_per_100g": 0, "carbs_per_100g": 0,
+    }])
+    assert result["status"] == "updated"
+
+    after = (await service.compare_variants(["test-1-v1"]))["comparisons"][0]
+    assert after["comparable"] is True
+    assert after["partial_difference"] is None
+    assert after["difference"]["calories"] == {"absolute": -25.0, "percent": -9.6}
+    assert after["coverage"]["variant"]["percent"] == 100.0
+    assert after["change_effects"][0]["counted"] is True
+    assert after["notes"] == []
