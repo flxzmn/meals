@@ -123,7 +123,7 @@ def test_manifest_asks_for_usda_key(bundled_manifest):
     assert bundled_manifest["server"]["mcp_config"]["env"]["USDA_API_KEY"] == "${user_config.usda_api_key}"
 
 
-async def test_server_starts_from_bundle(unpacked, bundled_manifest):
+async def test_server_starts_from_bundle(unpacked, bundled_manifest, tmp_path):
     config = bundled_manifest["server"]["mcp_config"]
     command = shutil.which(config["command"])
     assert command, f"{config['command']} not found on PATH"
@@ -135,6 +135,7 @@ async def test_server_starts_from_bundle(unpacked, bundled_manifest):
 
     env = {key: value for key, value in os.environ.items() if key not in {"DATABASE_URL", "USDA_API_KEY"}}
     env.update({key: resolve(value) for key, value in config["env"].items()})
+    env["MEAL_DATA_DIR"] = str(tmp_path)
     transport = StdioTransport(
         command=command,
         args=[resolve(arg) for arg in config["args"]],
@@ -151,7 +152,8 @@ async def test_server_starts_from_bundle(unpacked, bundled_manifest):
         )
         assert result.data["status"] == "candidates_required"
 
-    assert (unpacked / "recipe_mcp.db").exists(), "database must be created inside the install directory"
+    assert (tmp_path / "recipe_mcp.db").exists(), "database must be created in the data folder"
+    assert not (unpacked / "recipe_mcp.db").exists(), "a reinstall deletes the install directory"
 
 
 # Experimental uv bundle (Sprint 11): server type "uv", dependencies from pyproject.toml / uv.lock.
@@ -186,13 +188,14 @@ def test_uv_manifest_differs_only_in_server(uv_unpacked):
     }
 
 
-async def test_server_starts_from_uv_bundle(uv_unpacked):
+async def test_server_starts_from_uv_bundle(uv_unpacked, tmp_path):
     """Runs the bundle like the host: uv installs the locked dependencies into a fresh environment."""
     uv = shutil.which("uv") or shutil.which("uv", path=str(Path(sys.executable).parent))
     if uv is None:
         pytest.skip("uv not found (install with: python -m pip install uv)")
     env = {key: value for key, value in os.environ.items() if key not in {"DATABASE_URL", "USDA_API_KEY", "VIRTUAL_ENV"}}
     env["USDA_API_KEY"] = "release-test-key"
+    env["MEAL_DATA_DIR"] = str(tmp_path)
     transport = StdioTransport(
         command=uv,
         args=["run", "--frozen", "--no-dev", "--directory", str(uv_unpacked), "main.py"],
@@ -203,4 +206,5 @@ async def test_server_starts_from_uv_bundle(uv_unpacked):
         tools = {tool.name for tool in await client.list_tools()}
         assert tools == {tool["name"] for tool in MANIFEST["tools"]}
     assert (uv_unpacked / ".venv").exists(), "uv must create its own environment"
-    assert (uv_unpacked / "recipe_mcp.db").exists()
+    assert (tmp_path / "recipe_mcp.db").exists()
+    assert not (uv_unpacked / "recipe_mcp.db").exists()

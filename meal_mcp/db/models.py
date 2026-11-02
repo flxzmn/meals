@@ -39,6 +39,8 @@ class Recipe(Base):
     # Who wrote the instructions of a variant: "original" (copied), "llm" (rewritten by Claude), "edited".
     instructions_source: Mapped[str | None] = mapped_column(String(20))
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # TheMealDB has no servings, so this is None until the user states it. Variants inherit it.
+    servings: Mapped[int | None] = mapped_column(Integer)
 
     ingredients: Mapped[list["Ingredient"]] = relationship(
         back_populates="recipe",
@@ -51,6 +53,10 @@ class Recipe(Base):
         cascade="all, delete-orphan",
         order_by="Recipe.id",
     )
+
+    @property
+    def effective_servings(self) -> int | None:
+        return self.servings or (self.parent.servings if self.parent else None)
 
 
 class Ingredient(Base):

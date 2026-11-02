@@ -1,4 +1,4 @@
-# Meal MCP v1.0.0
+# Meal MCP v1.1.0
 
 Local FastMCP server for bulk recipe lookup, storage, USDA nutrition enrichment and a learning substitution knowledge base.
 
@@ -17,6 +17,9 @@ Local FastMCP server for bulk recipe lookup, storage, USDA nutrition enrichment 
 - Quantity adjustment: substitute amounts follow a ratio per substitution, piece counts become grams
 - Nutrition comparison of a variant with its original
 - USDA matches can be inspected, corrected by hand and rejected; German ingredient names work
+- Data folder outside the extension, so a reinstall keeps recipes and rules; export and import as JSON
+- Servings: nutrition per serving and ingredient amounts for another number of servings
+- Evals: fixed prompts check which tools Claude chooses in Claude Desktop
 
 ## Documentation
 
@@ -30,9 +33,10 @@ Course material and guides (German):
 | [docs/RELEASE_TEST.md](docs/RELEASE_TEST.md) | Automated and manual release test in Claude Desktop |
 | [docs/TESTPROTOKOLL.md](docs/TESTPROTOKOLL.md) | Test levels, test files, acceptance criteria per sprint, results |
 | [docs/EINSCHRAENKUNGEN.md](docs/EINSCHRAENKUNGEN.md) | Known limitations |
-| [docs/FEHLERANALYSE.md](docs/FEHLERANALYSE.md) | Thirteen real errors from the logs: symptom, cause, fix, lesson |
+| [docs/FEHLERANALYSE.md](docs/FEHLERANALYSE.md) | Fifteen real errors from the logs: symptom, cause, fix, lesson |
 | [docs/VERSIONEN.md](docs/VERSIONEN.md) | Versions v0.2 to v0.12 compared |
 | [docs/UEBUNGEN.md](docs/UEBUNGEN.md) | Exercises (draft) |
+| [docs/EVALS.md](docs/EVALS.md) | Evals: which tools Claude chooses for fixed prompts |
 
 ## Setup (Windows PowerShell)
 
@@ -74,9 +78,9 @@ The server uses STDIO and waits for an MCP client such as Claude Desktop.
 - `get_recipes(mealdb_ids)`
 - `delete_recipes(mealdb_ids)`
 - `enrich_recipes(mealdb_ids, refresh)`
-- `get_nutrition(mealdb_ids)`
-- `calculate_nutrition(ingredients)`
-- `compare_nutrition(mealdb_ids, enrich)`
+- `get_nutrition(mealdb_ids, compact)`
+- `calculate_nutrition(ingredients, servings)`
+- `compare_nutrition(mealdb_ids, enrich, compact)`
 - `search_usda_foods(queries)`
 - `list_ingredient_matches(ingredients)`
 - `set_ingredient_matches(matches)`
@@ -86,7 +90,7 @@ The server uses STDIO and waits for an MCP client such as Claude Desktop.
 - `list_substitutions()`
 - `set_substitution_quantities(rules)`
 - `delete_substitutions(substitutions)`
-- `adapt_recipes(mealdb_ids, constraints)`
+- `adapt_recipes(mealdb_ids, constraints, compact)`
 - `suggest_substitutions(ingredients, constraints)`
 - `record_substitution_suggestions(suggestions, constraints)`
 - `approve_substitutions(suggestions, constraints)`
@@ -98,6 +102,10 @@ The server uses STDIO and waits for an MCP client such as Claude Desktop.
 - `update_recipe_variants(updates)`
 - `rewrite_instructions(mealdb_ids, force)`
 - `save_rewritten_instructions(rewrites)`
+- `set_recipe_servings(recipes)`
+- `scale_recipes(recipes)`
+- `export_data(path)`
+- `import_data(path)`
 
 ## Substitution learning workflow
 
@@ -204,6 +212,13 @@ needs the packages from `requirements.txt`. Claude Desktop asks for the USDA API
 
 Delete `recipe_mcp.db` after upgrading from v0.5.0 or older: the schema changed and existing
 tables are not migrated.
+
+## Data folder
+
+Since v1.1 the database and exports live outside the extension: `%APPDATA%\MealMCP` on Windows,
+`~/Library/Application Support/MealMCP` on macOS. `MEAL_DATA_DIR` moves the folder, `DATABASE_URL`
+replaces only the database. If the folder has no database yet and the extension folder still has
+one, it is copied on start.
 
 ## USDA matching
 

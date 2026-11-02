@@ -21,7 +21,7 @@
 2. `meal-<version>-uv.mcpb` installieren und den USDA-Key eingeben.
 3. **Neuen Chat öffnen.** Ein laufender Chat nutzt weiter den alten Serverprozess. Der erste Start
    kann länger dauern, weil Abhängigkeiten geladen werden.
-4. Test: „Suche Chicken Handi, speichere es und berechne die Nährwerte.“ Erwartet: etwa 4.358 kcal.
+4. Test: „Suche Chicken Handi, speichere es und berechne die Nährwerte.“ Erwartet: etwa 4.250 kcal.
 
 Getestet mit Claude Desktop unter Windows 11 und macOS (arm64). Claude Desktop nutzt sein eigenes
 uv (`uv-runtime`, gesehen: 0.9.7) und legt im Erweiterungsordner eine `.venv` an. Ein eigenes uv ist
@@ -53,10 +53,23 @@ uv-Paket verwenden.
 
 ## Datenbank
 
-Die SQLite-Datei `recipe_mcp.db` liegt im Installationsordner der Erweiterung, unter Windows z. B.
-`%LOCALAPPDATA%\Claude-Data\…\Claude Extensions\local.mcpb.felix-zimmermann.meal\`. Eine
-Neuinstallation beginnt mit einer leeren Datenbank. Neue Spalten werden beim Start ergänzt; beim
-Wechsel von v0.5.0 oder älter die Datenbank löschen.
+Seit v1.1 liegt die SQLite-Datei `recipe_mcp.db` außerhalb der Erweiterung, damit eine
+Neuinstallation sie nicht löscht:
+
+- Windows: `%APPDATA%\MealMCP\`
+- macOS: `~/Library/Application Support/MealMCP/`
+
+Unter Windows kann eine Installation aus dem Microsoft Store den Ordner nach
+`%LOCALAPPDATA%\Packages\Claude_*\LocalCache\Roaming\MealMCP\` umleiten.
+
+`export_data` schreibt alles in eine JSON-Datei, `import_data` liest sie wieder ein, auch auf einem
+anderen Rechner. Der Import ergänzt nur und überschreibt nichts. Der USDA-Key ist nie Teil des Exports.
+
+**Wechsel von v1.0:** Beim Entfernen der Erweiterung wird die alte Datenbank mit gelöscht. Wer seine
+Daten behalten will, kopiert `recipe_mcp.db` vorher aus dem Erweiterungsordner
+(`%LOCALAPPDATA%\Claude-Data\…\Claude Extensions\local.mcpb.felix-zimmermann.meal\`) in den neuen
+Ordner. Neue Spalten werden beim Start ergänzt, und die Grammwerte gespeicherter Zutaten werden mit
+dem aktuellen Mengen-Parser neu berechnet (aus `1 ½ tbsp` werden dann 22,5 g statt 7,5 g).
 
 ## Häufige Probleme
 

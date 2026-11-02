@@ -71,7 +71,14 @@ Windows 11): bestanden. `compare_nutrition` mit Chicken Handi und einer erfunden
 USDA-Treffer meldete zuerst `comparable: false` und `difference: null`. Nach dem Speichern der
 Etikettwerte (140 kcal pro 100 g) meldete es `comparable: true` und −900 kcal (−20,7 %).
 
-Offen: ein Rechner ganz ohne Python.
+## Lauf über 51 Rezepte
+
+Der Protokolllauf „Weltküche“ mit v1.0.0 lieferte die Befunde für v1.1.0: 19 von 51 Gerichten verlässlich,
+22 mit Lücken, 10 unbrauchbar (Einschätzung von Claude im Chat). Dieselben Rezepte mit v1.1.0 wurden live gegen
+USDA wiederholt, ohne Claude: Das Anreichern brauchte vier Aufrufe von je höchstens 44 s; 6 Gerichte liegen
+unter 60 % Abdeckung, 28 bei mindestens 80 %. Ein Lauf in Claude Desktop steht aus.
+
+Offen: ein Rechner ganz ohne Python, der Lauf von v1.1.0 in Claude Desktop.
 
 ## Läufe
 

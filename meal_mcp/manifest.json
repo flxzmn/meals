@@ -2,9 +2,9 @@
   "manifest_version": "0.2",
   "name": "meal",
   "display_name": "Meal MCP",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Rezepte finden, Nährwerte berechnen und Gerichte an deine Ernährung anpassen, mit einer Ersatz-Wissensbasis, die aus deinen Entscheidungen lernt.",
-  "long_description": "**Meal MCP** macht aus Claude einen Küchenassistenten mit Gedächtnis: Rezepte finden, Nährwerte berechnen und Gerichte an deine Ernährung anpassen.\n\n**Was du damit machen kannst**\n\n- **Rezepte** aus TheMealDB suchen und lokal speichern\n- **Nährwerte** mit USDA-Daten berechnen, auch ohne gespeichertes Rezept und mit deutschen Zutatennamen\n- **Zutaten ersetzen**: Claude schlägt vor, du entscheidest; freigegebene Regeln werden wiederverwendet, abgelehnte Vorschläge kommen nicht wieder\n- **Varianten** speichern, zum Beispiel vegan oder ohne Nüsse, mit angepassten Mengen und umgeschriebener Anleitung\n- **Vergleichen**: Original und Variante nebeneinander, Zutat für Zutat\n- **Korrigieren**: falsche USDA-Treffer sperren oder Werte vom Etikett eintragen\n\n**So probierst du es aus**\n\n- „Suche Chicken Handi, speichere es und berechne die Nährwerte.“\n- „Mach das Rezept vegan und speichere die Variante.“\n- „Vergleiche die Nährwerte der Variante mit dem Original.“\n\n**Du brauchst** einen eigenen, kostenlosen USDA-API-Key (https://fdc.nal.usda.gov/api-key-signup). Claude Desktop fragt bei der Installation danach.\n\n**Gut zu wissen:** Rezepte, Regeln und Varianten liegen in einer lokalen Datenbank auf deinem Rechner. Suchanfragen gehen an TheMealDB und USDA, Tool-Ergebnisse wie jeder Chatinhalt an Claude. Nährwerte sind Schätzungen. Tags wie „nussfrei“ ersetzen nicht den Blick aufs Etikett, und bei Allergien ist das keine verlässliche Grundlage.",
+  "long_description": "**Meal MCP** macht aus Claude einen Küchenassistenten mit Gedächtnis: Rezepte finden, Nährwerte berechnen und Gerichte an deine Ernährung anpassen.\n\n**Was du damit machen kannst**\n\n- **Rezepte** aus TheMealDB suchen und lokal speichern\n- **Nährwerte** mit USDA-Daten berechnen, auch ohne gespeichertes Rezept und mit deutschen Zutatennamen\n- **Zutaten ersetzen**: Claude schlägt vor, du entscheidest; freigegebene Regeln werden wiederverwendet, abgelehnte Vorschläge kommen nicht wieder\n- **Varianten** speichern, zum Beispiel vegan oder ohne Nüsse, mit angepassten Mengen und umgeschriebener Anleitung\n- **Vergleichen**: Original und Variante nebeneinander, Zutat für Zutat\n- **Korrigieren**: falsche USDA-Treffer sperren oder Werte vom Etikett eintragen\n- **Portionen**: Nährwerte pro Portion und Mengen für eine andere Personenzahl\n- **Sichern**: alles als Datei exportieren und wieder einlesen\n\n**So probierst du es aus**\n\n- „Suche Chicken Handi, speichere es und berechne die Nährwerte.“\n- „Mach das Rezept vegan und speichere die Variante.“\n- „Vergleiche die Nährwerte der Variante mit dem Original.“\n\n**Du brauchst** einen eigenen, kostenlosen USDA-API-Key (https://fdc.nal.usda.gov/api-key-signup). Claude Desktop fragt bei der Installation danach.\n\n**Gut zu wissen:** Rezepte, Regeln und Varianten liegen in einer lokalen Datenbank auf deinem Rechner. Sie liegt außerhalb der Erweiterung und übersteht eine Neuinstallation. Suchanfragen gehen an TheMealDB und USDA, Tool-Ergebnisse wie jeder Chatinhalt an Claude. Nährwerte sind Schätzungen. Tags wie „nussfrei“ ersetzen nicht den Blick aufs Etikett, und bei Allergien ist das keine verlässliche Grundlage.",
   "author": {
     "name": "Felix Zimmermann",
     "url": "https://github.com/flxzmn"
@@ -42,7 +42,7 @@
   "tools": [
     {
       "name": "adapt_recipes",
-      "description": "Adapt several saved recipes using the substitution knowledge base.\n\nSubstitute amounts follow the quantity_ratio of each substitution: mass and volume are scaled,\npiece counts are converted to grams with USDA portion weights (run enrich_recipes first).\nAmounts that cannot be converted are listed in unverified_quantities.\nThe result is not stored. To keep a variant, pass items of adapted_recipes to save_adapted_recipes."
+      "description": "Adapt several saved recipes using the substitution knowledge base.\n\nSubstitute amounts follow the quantity_ratio of each substitution: mass and volume are scaled,\npiece counts are converted to grams with USDA portion weights (run enrich_recipes first).\nAmounts that cannot be converted are listed in unverified_quantities.\nhidden_ingredients lists known ingredients that stand only in a measure text or the instructions and\nwere not replaced: tell the user. Above 5 recipes the result is compact (no instructions, short\ningredient rows); save_adapted_recipes accepts it. compact=false forces full detail.\nThe result is not stored. To keep a variant, pass items of adapted_recipes to save_adapted_recipes."
     },
     {
       "name": "add_substitutions",
@@ -54,11 +54,11 @@
     },
     {
       "name": "calculate_nutrition",
-      "description": "Calculate nutrition of free ingredients without a saved recipe: [{name, measure}], e.g.\n[{\"name\": \"Hähnchen\", \"measure\": \"500 g\"}, {\"name\": \"Zwiebeln\", \"measure\": \"2\"}].\n\nUses the same USDA matching, portion weights and manual rules as recipes. German names work."
+      "description": "Calculate nutrition of free ingredients without a saved recipe: [{name, measure}], e.g.\n[{\"name\": \"Hähnchen\", \"measure\": \"500 g\"}, {\"name\": \"Zwiebeln\", \"measure\": \"2\"}].\n\nUses the same USDA matching, portion weights and manual rules as recipes. German names work.\nWith servings the result also contains per_serving."
     },
     {
       "name": "compare_nutrition",
-      "description": "Compare the nutrition of recipe variants with their originals.\n\nPass variant IDs, or an original ID to compare all its variants. Returns calories, protein,\nfat and carbs of both, the absolute and percent difference, the coverage (how many ingredients\nare counted) and the effect of each ingredient change. enrich=true loads missing USDA data first.\nIf a replaced ingredient has no data, comparable is false and difference is null: do not present\npartial_difference as a result; store values with set_ingredient_matches and compare again."
+      "description": "Compare the nutrition of recipe variants with their originals.\n\nPass variant IDs, or an original ID to compare all its variants. Returns calories, protein,\nfat and carbs of both, the absolute and percent difference, the coverage (how many ingredients\nare counted) and the effect of each ingredient change. enrich=true loads missing USDA data first.\nIf a replaced ingredient has no data, comparable is false and difference is null: do not present\npartial_difference as a result; notes names the cause. Above 5 comparisons the result is compact\n(only uncounted change_effects, no uncovered_ingredients); compact=false forces full detail."
     },
     {
       "name": "delete_recipes",
@@ -70,7 +70,11 @@
     },
     {
       "name": "enrich_recipes",
-      "description": "Enrich several saved recipes with cached USDA nutrition data in one tool call.\n\nSet refresh=true to look up all ingredients again and replace cached USDA matches."
+      "description": "Enrich several saved recipes with cached USDA nutrition data in one tool call.\n\nSet refresh=true to look up all ingredients again and replace cached USDA matches; use it with a few\nrecipes at a time. Long runs stop in time and save their progress: if complete is false, call again\nwith the same IDs."
+    },
+    {
+      "name": "export_data",
+      "description": "Save all recipes, variants, substitutions, decisions, USDA matches and label values to a JSON file.\n\nWithout path the file goes to the exports folder in the data folder; the result names the location.\nAn existing file is not overwritten. The file holds no API key."
     },
     {
       "name": "find_substitutions",
@@ -78,11 +82,15 @@
     },
     {
       "name": "get_nutrition",
-      "description": "Return estimated nutrition summaries for several saved recipes.\n\nCall enrich_recipes first: ingredients without USDA data are not counted.\ningredient_breakdown lists the USDA food used for each ingredient and how its grams were derived\n(grams_basis: measured, USDA portion weight for pieces and spoons, or approx. 1 g/ml for volumes)."
+      "description": "Return estimated nutrition summaries for several saved recipes.\n\nCall enrich_recipes first: ingredients without USDA data are not counted.\ningredient_breakdown lists the USDA food used for each ingredient and how its grams were derived\n(grams_basis: measured, USDA portion weight for pieces and spoons, or approx. 1 g/ml for volumes).\nper_serving is null until the servings are known (set_recipe_servings).\nAbove 5 recipes the result is compact (totals, coverage, uncovered ingredients); compact=false forces\nfull detail, compact=true forces the short form."
     },
     {
       "name": "get_recipes",
       "description": "Return several saved recipes or variants in full: ingredients, instructions and, for variants,\nthe original recipe, constraints and changes."
+    },
+    {
+      "name": "import_data",
+      "description": "Load a file written by export_data into the database.\n\nAdds what is missing and keeps everything that already exists, so nothing is overwritten and\nimporting twice changes nothing. If the file is damaged, nothing is imported."
     },
     {
       "name": "list_ingredient_matches",
@@ -137,6 +145,10 @@
       "description": "Store rewritten instructions for several variants: [{mealdb_id, instructions}].\n\nThe text is marked as LLM-generated (instructions_source='llm'). Warnings list replaced\ningredients that are still mentioned. Original recipes cannot be changed."
     },
     {
+      "name": "scale_recipes",
+      "description": "Show ingredient amounts for another number of servings: [{mealdb_id, servings}].\n\nNeeds known servings (set_recipe_servings). Nothing is saved; save_adapted_recipes stores a\nscaled recipe as a variant if the user wants to keep it."
+    },
+    {
       "name": "search_recipes",
       "description": "Search TheMealDB for several recipe queries in one tool call."
     },
@@ -147,6 +159,10 @@
     {
       "name": "set_ingredient_matches",
       "description": "Pin nutrition data to several ingredients and keep it, also with enrich_recipes refresh=true.\n\nEither a USDA food: {ingredient, fdc_id, note}. Or, for foods USDA does not have, values per\n100 g from a label: {ingredient, calories_per_100g, protein_per_100g, fat_per_100g,\ncarbs_per_100g, note}. Stored values count in get_nutrition and compare_nutrition."
+    },
+    {
+      "name": "set_recipe_servings",
+      "description": "Store how many servings recipes make: [{mealdb_id, servings}]. Variants inherit the value of\ntheir original unless they have their own.\n\nTheMealDB has no servings: use what the user says or what the instructions state, do not guess.\nget_nutrition and compare_nutrition then also return per_serving."
     },
     {
       "name": "set_substitution_quantities",

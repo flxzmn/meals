@@ -13,6 +13,9 @@ from services.measure_service import (
     normalize_ingredient_name,
     scale_measure,
 )
+from services.instruction_service import mentioned_terms
+
+COMPACT_ABOVE = 5
 
 
 class SubstitutionService:
@@ -41,7 +44,7 @@ class SubstitutionService:
             for source, rows in candidates.items()
         }
 
-    def adapt_recipes(self, mealdb_ids: list[str], constraints: dict | None = None) -> dict:
+    def adapt_recipes(self, mealdb_ids: list[str], constraints: dict | None = None, compact: bool | None = None) -> dict:
         constraints = constraints or {}
         recipes = self.recipe_repo.get_bulk(mealdb_ids)
         found_ids = {recipe.mealdb_id for recipe in recipes}
@@ -54,7 +57,9 @@ class SubstitutionService:
         adapted_recipes: list[dict] = []
         missing_substitutions: set[str] = set()
         unverified_quantities: list[dict] = []
+        hidden_ingredients: list[dict] = []
         substitutions_applied = 0
+        known_sources = self._known_sources(constraints)
 
         for recipe in recipes:
             adapted_ingredients: list[dict] = []
@@ -95,6 +100,8 @@ class SubstitutionService:
 
                 adapted_ingredients.append(ingredient_result)
 
+            hidden = self._hidden_ingredients(recipe, known_sources)
+            hidden_ingredients.extend(hidden)
             adapted_recipes.append({
                 "source_mealdb_id": recipe.mealdb_id,
                 "source_recipe_name": recipe.name,
@@ -106,7 +113,12 @@ class SubstitutionService:
                 "constraints": constraints,
                 "changes": recipe_changes,
                 "ingredients": adapted_ingredients,
+                "hidden_ingredients": [row for row in hidden],
             })
+
+        compact = len(recipes) > COMPACT_ABOVE if compact is None else compact
+        if compact:
+            adapted_recipes = [self._compact(item) for item in adapted_recipes]
 
         status = "success"
         if missing_recipes or missing_substitutions:
@@ -114,14 +126,50 @@ class SubstitutionService:
 
         return {
             "status": status,
+            "compact": compact,
             "recipes_processed": len(recipes),
             "adapted_recipes": adapted_recipes,
             "substitutions_applied": substitutions_applied,
             "missing_recipes": missing_recipes,
             "missing_substitutions": sorted(missing_substitutions),
             "unverified_quantities": unverified_quantities,
+            "hidden_ingredients": hidden_ingredients,
             "note": "Adapted recipes are returned, not stored. Save them with save_adapted_recipes. The original recipes remain unchanged.",
+            **({"hidden_note": "These ingredients have a substitution but stand only in a measure text or the instructions, so they "
+                               "were not replaced. Tell the user; rewrite_instructions or update_recipe_variants can fix them."} if hidden_ingredients else {}),
+            **({"compact_note": "Compact form: instructions and image are left out and only names, positions and measures are "
+                                "listed. save_adapted_recipes accepts these items and keeps the original instructions."} if compact else {}),
         }
+
+    def _known_sources(self, constraints: dict) -> dict[str, str]:
+        """Ingredients with a usable substitution for these constraints: source -> best target."""
+        sources = sorted({normalize_ingredient_name(row["source_ingredient"]) for row in self.substitution_repo.list_all()})
+        return {source: rows[0]["target_ingredient"] for source, rows in self.find_substitutions(sources, constraints).items() if rows}
+
+    @staticmethod
+    def _hidden_ingredients(recipe, known_sources: dict[str, str]) -> list[dict]:
+        """Known source ingredients that stand only in a measure ("dissolved in warm milk") or the instructions.
+
+        Only finds what the knowledge base knows; a fish that has no rule stays invisible.
+        """
+        names = [ingredient.normalized_name for ingredient in recipe.ingredients]
+        listed = " ".join(names)
+        hidden = []
+        for ingredient in recipe.ingredients:
+            for term in mentioned_terms(ingredient.measure, list(known_sources)):
+                hidden.append({"recipe": recipe.mealdb_id, "term": term, "where": f"measure of {ingredient.name}", "substitute": known_sources[term]})
+        unlisted = [term for term in known_sources if term not in listed]
+        for term in mentioned_terms(recipe.instructions or "", unlisted, names):
+            hidden.append({"recipe": recipe.mealdb_id, "term": term, "where": "instructions", "substitute": known_sources[term]})
+        return hidden
+
+    @staticmethod
+    def _compact(item: dict) -> dict:
+        result = {key: value for key, value in item.items() if key not in ("instructions", "image_url", "category", "area", "source_recipe_name")}
+        result["ingredients"] = [
+            {key: row[key] for key in ("position", "name", "measure")} for row in item["ingredients"]
+        ]
+        return result
 
     @staticmethod
     def _filter_candidates(candidates: list[dict], constraints: dict) -> list[dict]:

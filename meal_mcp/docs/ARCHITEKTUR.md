@@ -10,7 +10,7 @@ lernende Wissensbasis für Zutatenersatz. Stand: v0.12.1.
 Claude Desktop (LLM, Chat, Nutzerentscheidungen)
     │  MCP über STDIO
     ▼
-mcp_tools/      30 Tools. Nur Ein- und Ausgabe, keine Fachlogik.
+mcp_tools/      34 Tools. Nur Ein- und Ausgabe, keine Fachlogik.
     ▼
 services/       Fachlogik: Bulk-Verarbeitung, Filter, Umrechnung, Vergleich.
     ▼
@@ -115,6 +115,8 @@ list_ingredient_matches ──► falscher Treffer?
 | Ersatzregeln | `add_substitutions`, `find_substitutions`, `list_substitutions`, `delete_substitutions`, `set_substitution_quantities`, `adapt_recipes` |
 | Lernen | `suggest_substitutions`, `record_substitution_suggestions`, `approve_substitutions`, `reject_substitutions`, `list_substitution_suggestions`, `list_substitution_feedback` |
 | Varianten | `save_adapted_recipes`, `list_recipe_variants`, `update_recipe_variants`, `rewrite_instructions`, `save_rewritten_instructions` |
+| Portionen | `set_recipe_servings`, `scale_recipes` |
+| Daten | `export_data`, `import_data` |
 
 ## Wo was steht
 

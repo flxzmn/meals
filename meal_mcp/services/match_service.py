@@ -51,6 +51,9 @@ class MatchService:
             if row is None:
                 errors.append({"ingredient": item["source_name"], "reason": f"USDA food {item['fdc_id']} not found."})
                 continue
+            if row["calories_per_100g"] is None:
+                errors.append({"ingredient": item["source_name"], "reason": f"USDA food {item['fdc_id']} has no energy value. Choose another food or enter values from the label."})
+                continue
             self.rules.set_choice(item["normalized_name"], item["fdc_id"], item["note"])
             self.nutrition_repo.save_bulk([row])
             updated.append(self._summary(row, "manual"))

@@ -1,6 +1,6 @@
 # Fehleranalyse anhand realer Logs
 
-Alle Fälle sind während der Entwicklung von v0.4 bis v0.12 tatsächlich aufgetreten. Jeder Fall
+Alle Fälle sind während der Entwicklung von v0.4 bis v1.1 tatsächlich aufgetreten. Jeder Fall
 folgt demselben Schema: Symptom, Beleg, Ursache, Behebung, Lehre. Die Fälle eignen sich als
 Übungen (siehe [UEBUNGEN.md](UEBUNGEN.md)): Log zeigen, Ursache suchen lassen.
 
@@ -174,3 +174,49 @@ Hinweis daneben genügt nicht.
 **Behebung:** uv-Paket mit `pyproject.toml` und `uv.lock` (v0.11); auf dem Mac mit Claude Desktop
 getestet: Der Host startet sein eigenes uv statt `/usr/bin/python3`. Siehe
 [INSTALLATION.md](INSTALLATION.md).
+
+## 14. Brüche als ganze Einheit gerechnet
+
+**Symptom:** Bei einer Sammlung aus 51 Rezepten waren selbst nach Handkorrekturen nur 19 Gerichte
+verlässlich. Tahini kam auf 1.673 kcal, die Arepa auf 10.000 kcal, Rapsöl auf 0 kcal.
+
+**Beleg (Protokoll, v1.0.0):** `1/2 cup` Pflanzenöl = 218 g, `1/4 cup` Tahini = 240 g, `1/2` Gurke = 201 g.
+`1 Packet` Filoteig = 19 g, `1 can` Bohnen = 35 g, `12` Cashews = 360 g, `2 x 400g` Fisch = 258 g.
+`1½ kg` mit Faktor 0,3 wurde zum Mengentext `0.3 ½ kg`.
+
+**Ursache:** Mehrere voneinander unabhängige Fehler:
+
+1. In `parse_amount` kam im regulären Ausdruck die ganze Zahl vor dem Bruch. `1/4` ergab also 1 und den
+   Rest `/4 cup`. `estimate_grams` las denselben Text richtig, und nur diese Funktion war für
+   `1/4` getestet.
+2. Passte keine Portion zur Einheit, nahm der Code das erste Stückgewicht. So wurde „1 Packet“ zu 1 Blatt.
+   Auch RACC, eine Bezugsmenge für Etiketten, galt als Stück.
+3. Einige Foundation-Einträge haben keinen Energiewert. `None` wurde beim Rechnen still zu 0.
+4. Die Suche fand für kurze Namen Fertigprodukte: „chilli“ einen Eintopf, „lemongrass“ eine Dosensuppe.
+
+**Behebung:** Gemeinsamer Ausdruck für Mengen, Behälter werden nicht mehr umgerechnet, Lebensmittel ohne
+Energiewert werden nicht gewählt und ungezählt gemeldet, Alias-Tabelle erweitert, SR Legacy vor Foundation,
+Dichte für trockene Lebensmittel. Die Fälle stehen als Regressionstests in `tests/test_weltkueche.py`.
+
+**Lehre:** Abnahmen mit einem Beispielrezept finden keine Fehler, die im Beispiel nicht vorkommen. Chicken
+Handi nutzt keine Schreibweise wie `1/2`. Erst ein Lauf über viele echte Daten zeigte den Fehler, und
+Claude konnte ihn nur erkennen, weil das Tool die Grundlage jeder Zahl ausgibt (`grams_basis`).
+
+## 15. Korrigierter Parser, alte Zahlen
+
+**Symptom:** Mit v1.1.0 auf der Datenbank von v1.0.0 galt `2 x 400g` Barramundi als nicht umrechenbar,
+obwohl `estimate_grams("2 x 400g")` 800 g ergibt und der Test dafür grün war.
+
+**Beleg (Vergleich beider Datenbanken):** 175 von 1.588 gespeicherten Zutaten trugen einen anderen Wert,
+als der aktuelle Parser liefert: `1 ½ tbsp` = 7,5 g statt 22,5 g, `2-1/2 cups` = 120 g statt 600 g,
+`2 tbs` = leer statt 30 g.
+
+**Ursache:** `estimated_grams` wird beim Speichern eines Rezepts berechnet und in der Datenbank abgelegt.
+Ein besserer Parser ändert nur neu gespeicherte Rezepte. Die Tests legen jedes Rezept frisch an und
+konnten das nicht sehen.
+
+**Behebung:** `refresh_estimated_grams` in `db/db.py` rechnet die Werte bei jedem Start neu. Der Wert
+entsteht immer aus der Mengenangabe und ist nie eine Nutzereingabe, deshalb geht dabei nichts verloren.
+
+**Lehre:** Abgeleitete Werte, die gespeichert werden, sind ein Cache und veralten mit dem Code. Ein
+Upgrade-Test braucht eine Datenbank der alten Version, keine frisch angelegte.

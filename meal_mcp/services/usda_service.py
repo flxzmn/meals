@@ -78,7 +78,8 @@ class USDAService:
 
     async def _find(self, client: httpx.AsyncClient, query: str, exclude: set[str] = frozenset()) -> dict | None:
         foods = [food for food in await self._candidates(client, query) if str(food["fdcId"]) not in exclude]
-        return best_match(query, foods)
+        # Some Foundation foods ("Oil, canola") have no energy value at all; they would count as 0 kcal.
+        return best_match(query, [food for food in foods if self._extract("", "", food)["calories_per_100g"] is not None])
 
     @staticmethod
     def _describe_error(exc: Exception) -> str:

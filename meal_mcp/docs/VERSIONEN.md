@@ -17,7 +17,8 @@
 | v0.11.0 | 11 | uv-Paket ohne Python-Einrichtung | – | automatisch getestet |
 | v0.12.0 | 12 | Dokumentation und Lehrmaterial | – | Endabnahme Windows: vier Befunde |
 | v0.12.1 | – | Befunde behoben: ehrlicher Vergleich, Etikettwerte, Berechnung ohne Rezept, Fehlalarm bei Anleitungen | `calculate_nutrition` | uv-Paket auf Windows und macOS bestanden |
-| v1.0.0 | – | Manifest für den Release: Name, Beschreibung, Autor, Links, Icon | – | Release-Kandidat |
+| v1.0.0 | – | Manifest für den Release: Name, Beschreibung, Autor, Links, Icon | – | in Claude Desktop abgenommen |
+| v1.1.0 | – | Datenordner außerhalb der Erweiterung, Export und Import, Portionen, Evals. Mengen-Parser (Brüche, Behälter, `2 x 400g`), Treffer, fehlende Energiewerte, kompakte Ausgabe, Zeitlimit beim Anreichern, versteckte Zutaten | `set_recipe_servings`, `scale_recipes`, `export_data`, `import_data` | automatisch und live gegen USDA getestet |
 
 „Automatisch getestet“: Unit-Tests, MCP-Abnahmetest und Release-Test grün. Die Stände v0.6 bis v0.11
 wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROTOKOLL.md](TESTPROTOKOLL.md)).
@@ -33,6 +34,8 @@ wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROT
 | v0.7 | Gleiches Muster wie Sprint 5: Auftrag an das LLM, Ergebnis speichern, Ergebnis prüfen, Herkunft kennzeichnen. |
 | v0.8 bis v0.10 | Daten statt Annahmen: Portionsgewichte und Kandidatenlisten kommen aus USDA, Entscheidungen des Menschen werden als Regeln gespeichert. |
 | v0.11 | Auslieferung ist Teil des Produkts: gleiche Software, zwei Pakete, unterschiedliche Voraussetzungen. |
+| v1.0 → v1.1 | Ein Lauf über 51 echte Rezepte fand mehr Rechenfehler als alle Abnahmen zuvor. Siehe [FEHLERANALYSE.md](FEHLERANALYSE.md), Fall 14. |
+| v1.1 | Evals schließen die Lücke zwischen grünen Tests und dem Verhalten im Chat: Geprüft wird, was das LLM mit den Tools tut. |
 
 ## Testumfang
 
@@ -43,3 +46,4 @@ wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROT
 | v0.10.0 | 125 | 7 |
 | v0.12.0 | 125 | 10 |
 | v0.12.1 | 132 | 10 |
+| v1.1.0 | 279 | 12 |

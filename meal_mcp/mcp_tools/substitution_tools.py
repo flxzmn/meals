@@ -47,13 +47,16 @@ def delete_substitutions(substitutions: list[dict]) -> dict:
 
 
 @mcp.tool()
-def adapt_recipes(mealdb_ids: list[str], constraints: dict | None = None) -> dict:
+def adapt_recipes(mealdb_ids: list[str], constraints: dict | None = None, compact: bool | None = None) -> dict:
     """Adapt several saved recipes using the substitution knowledge base.
 
     Substitute amounts follow the quantity_ratio of each substitution: mass and volume are scaled,
     piece counts are converted to grams with USDA portion weights (run enrich_recipes first).
     Amounts that cannot be converted are listed in unverified_quantities.
+    hidden_ingredients lists known ingredients that stand only in a measure text or the instructions and
+    were not replaced: tell the user. Above 5 recipes the result is compact (no instructions, short
+    ingredient rows); save_adapted_recipes accepts it. compact=false forces full detail.
     The result is not stored. To keep a variant, pass items of adapted_recipes to save_adapted_recipes.
     """
     with session_scope() as session:
-        return SubstitutionService(session).adapt_recipes(mealdb_ids, constraints)
+        return SubstitutionService(session).adapt_recipes(mealdb_ids, constraints, compact)

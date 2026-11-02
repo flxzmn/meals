@@ -23,9 +23,11 @@ and everything else; it adds no "_meta" key.
 import asyncio
 import copy
 import json
+import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -112,7 +114,9 @@ def main() -> int:
     DIST_DIR.mkdir(exist_ok=True)
 
     stage(STAGE_DIR, RUNTIME_FILES)
-    result = subprocess.run([mcpb, "pack", str(STAGE_DIR), str(output), *args])
+    # mcpb pack starts the server to read its tools; keep it away from the user's real data folder.
+    with tempfile.TemporaryDirectory() as data_dir:
+        result = subprocess.run([mcpb, "pack", str(STAGE_DIR), str(output), *args], env={**os.environ, "MEAL_DATA_DIR": data_dir})
     if result.returncode != 0:
         return result.returncode
     print(f"Built {output} ({output.stat().st_size / 1024:.1f} KB)")

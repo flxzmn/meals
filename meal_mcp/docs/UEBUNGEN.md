@@ -95,6 +95,12 @@ Warnung, wenn die neue Anleitung eine Zutat nennt, die nicht in der Variante vor
 Baue das Paket einmal mit `mcpb pack .` im Projektordner und vergleiche Größe und Inhalt mit
 `python scripts/build_mcpb.py`. Welcher Release-Test würde anschlagen?
 
+### C5. Eval verbessern (45 Min.)
+
+Führe `python scripts/run_evals.py` aus ([EVALS.md](EVALS.md)) und wähle einen Fall, der nicht
+bestanden ist. Ändere nur die Beschreibung eines Tools, baue neu, installiere und wiederhole den Fall
+mehrmals. Hat sich etwas verbessert? Welcher andere Fall könnte dadurch schlechter werden?
+
 ## Block D: Reflexion
 
 - Wo liegt in diesem Projekt die Grenze zwischen dem, was das LLM tun darf, und dem, was der

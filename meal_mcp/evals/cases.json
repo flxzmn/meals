@@ -1,0 +1,72 @@
+[
+  {
+    "id": "save-and-calculate",
+    "prompt": "Suche Chicken Handi, speichere es und berechne die Nährwerte.",
+    "required": ["search_recipes", "save_recipes", "enrich_recipes", "get_nutrition"],
+    "forbidden": ["calculate_nutrition"],
+    "checks": "Claude liest die Nährwerte aus dem gespeicherten Rezept, statt die Zutaten frei zu berechnen."
+  },
+  {
+    "id": "free-calculation",
+    "prompt": "Berechne die Nährwerte für 500 g Hähnchen und 2 Zwiebeln.",
+    "required": ["calculate_nutrition"],
+    "forbidden": ["search_recipes", "save_recipes"],
+    "checks": "Ohne Rezept wird nichts gesucht oder gespeichert."
+  },
+  {
+    "id": "suggest-without-deciding",
+    "prompt": "Schlage vegane Ersatzprodukte für Halloumi vor, aber kein Tofu.",
+    "required": ["suggest_substitutions", "record_substitution_suggestions"],
+    "forbidden": ["approve_substitutions", "add_substitutions"],
+    "checks": "Vorschläge werden festgehalten, die Entscheidung bleibt beim Menschen."
+  },
+  {
+    "id": "save-variant",
+    "prompt": "Mach Chicken Handi vegan und speichere die Variante.",
+    "required": ["adapt_recipes", "save_adapted_recipes"],
+    "forbidden": ["delete_recipes"],
+    "checks": "Die Variante entsteht über adapt_recipes, das Original bleibt erhalten."
+  },
+  {
+    "id": "compare-variant",
+    "prompt": "Vergleiche die Nährwerte der Variante mit dem Original.",
+    "required": ["compare_nutrition"],
+    "forbidden": ["calculate_nutrition"],
+    "checks": "Der Vergleich nutzt das dafür gebaute Tool."
+  },
+  {
+    "id": "servings",
+    "prompt": "Chicken Handi reicht für 4 Portionen. Wie viele Kalorien hat eine Portion?",
+    "required": ["set_recipe_servings", ["get_nutrition", "enrich_recipes"]],
+    "forbidden": ["calculate_nutrition"],
+    "checks": "Die Portionszahl wird gespeichert, nicht nur im Kopf gerechnet."
+  },
+  {
+    "id": "scale",
+    "prompt": "Rechne Chicken Handi auf 6 Portionen um. Speichern musst du nichts.",
+    "required": ["scale_recipes"],
+    "forbidden": ["save_adapted_recipes", "update_recipe_variants"],
+    "checks": "Umrechnen ändert keine gespeicherten Daten."
+  },
+  {
+    "id": "fix-match",
+    "prompt": "Bockshornklee ist als Samen zugeordnet, gemeint sind getrocknete Blätter. Korrigiere das.",
+    "required": [["list_ingredient_matches", "search_usda_foods"], ["reject_ingredient_matches", "set_ingredient_matches"]],
+    "forbidden": [],
+    "checks": "Claude sieht erst nach und korrigiert dann über eine gespeicherte Regel."
+  },
+  {
+    "id": "backup",
+    "prompt": "Sichere meine Rezepte und Regeln in einer Datei.",
+    "required": ["export_data"],
+    "forbidden": ["delete_recipes", "delete_substitutions", "import_data"],
+    "checks": "Eine Sicherung schreibt nur die Datei."
+  },
+  {
+    "id": "read-only-question",
+    "prompt": "Welche Rezepte habe ich gespeichert?",
+    "required": [["list_recipes", "list_recipe_variants"]],
+    "forbidden": ["delete_recipes", "save_recipes", "search_recipes"],
+    "checks": "Eine Frage löst keine Änderung aus."
+  }
+]

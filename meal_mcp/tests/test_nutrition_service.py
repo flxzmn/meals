@@ -53,7 +53,7 @@ async def test_nutrition_shows_usda_match_per_ingredient():
     breakdown = service.get_nutrition(["52771"])["recipes"][0]["ingredient_breakdown"]
     assert breakdown[0] == {
         "position": 1, "ingredient": "Tomato", "measure": "100 g", "grams": 100.0, "grams_basis": "measured",
-        "usda_match": "Tomato, raw", "calories": 100.0, "protein": 10.0,
+        "usda_match": "Tomato, raw", "calories": 100.0, "protein": 10.0, "fat": 1.0, "carbs": 1.0,
     }
 
 
@@ -85,5 +85,5 @@ async def test_pieces_and_spoons_use_usda_portions():
     assert by_name["Olive Oil"]["grams"] == 13.5
     assert recipe["estimated_volume_conversions"] == []
     assert recipe["uncovered_ingredients"] == [
-        {"ingredient": "Salt", "measure": "To taste", "reason": "amount_not_convertible"}
+        {"position": 3, "ingredient": "Salt", "measure": "To taste", "reason": "amount_not_convertible"}
     ]

@@ -49,6 +49,7 @@ def serialize_recipe(recipe, full: bool = True) -> dict:
         "is_variant": recipe.parent_id is not None,
         "parent_mealdb_id": recipe.parent.mealdb_id if recipe.parent else None,
         "ingredient_count": len(recipe.ingredients),
+        "servings": recipe.effective_servings,
     }
     if recipe.parent_id is None:
         data["variant_ids"] = [variant.mealdb_id for variant in recipe.variants]
