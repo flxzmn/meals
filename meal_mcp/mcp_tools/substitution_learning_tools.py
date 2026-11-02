@@ -67,13 +67,8 @@ def reject_substitutions(
 
 @mcp.tool()
 def list_substitution_suggestions(status: str | None = None) -> dict:
-    """List recorded suggestions, optionally filtered by status: pending, approved or rejected."""
+    """List recorded suggestions and the feedback on them, optionally filtered by status: pending,
+    approved or rejected. Each suggestion has decisions (accepted, the user's feedback, date);
+    summary counts all approvals and rejections."""
     with session_scope() as session:
         return SubstitutionLearningService(session).list_suggestions(status)
-
-
-@mcp.tool()
-def list_substitution_feedback(accepted: bool | None = None) -> dict:
-    """List feedback for learned substitution suggestions."""
-    with session_scope() as session:
-        return SubstitutionLearningService(session).list_feedback(accepted)

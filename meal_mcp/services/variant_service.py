@@ -62,9 +62,6 @@ class VariantService:
                     "The original recipes remain unchanged.",
         }
 
-    def list_variants(self, source_mealdb_ids: list[str] | None = None) -> list[dict]:
-        return [serialize_recipe(variant, full=False) for variant in self.repo.list_variants(source_mealdb_ids)]
-
     def update_variants(self, updates: list[dict]) -> dict:
         updated: list[dict] = []
         errors: list[dict] = []

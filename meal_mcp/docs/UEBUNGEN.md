@@ -39,7 +39,7 @@ Ursache, bevor du weiterliest.
 Bitte Claude um vegane, nussfreie Ersatzprodukte für Halloumi ohne Tofu. Nimm einen Vorschlag an,
 lehne einen mit Begründung ab. Frage in einem **neuen Chat** erneut.
 
-- Was wurde gespeichert (`list_substitution_feedback`)?
+- Was wurde gespeichert (`list_substitution_suggestions`, Feld `decisions`)?
 - Taucht der abgelehnte Vorschlag wieder auf? Warum nicht?
 - Wo wird Tofu ausgeschlossen: von Claude oder vom Server? Wie lässt sich das nachweisen?
 

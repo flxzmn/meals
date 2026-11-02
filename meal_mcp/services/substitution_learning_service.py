@@ -208,14 +208,17 @@ class SubstitutionLearningService:
             "not_pending": not_pending,
         }
 
-    def list_feedback(self, accepted: bool | None = None) -> dict:
-        return {
-            "summary": self.feedback_repo.summary(),
-            "entries": self.feedback_repo.list_all(accepted),
-        }
-
     def list_suggestions(self, status: str | None = None) -> dict:
-        return {"suggestions": self.suggestion_repo.list_all(status)}
+        """Suggestions with the recorded decisions (user feedback) of the same pair and constraints."""
+        decisions: dict[tuple, list[dict]] = {}
+        for entry in self.feedback_repo.list_all():
+            key = (entry["source_ingredient"], entry["target_ingredient"], constraints_hash(normalize_constraints(entry["constraints"])))
+            decisions.setdefault(key, []).append({name: entry[name] for name in ("accepted", "feedback", "created_at")})
+        suggestions = self.suggestion_repo.list_all(status)
+        for row in suggestions:
+            key = (row["source_ingredient"], row["target_ingredient"], constraints_hash(normalize_constraints(row["constraints"])))
+            row["decisions"] = decisions.get(key, [])
+        return {"summary": self.feedback_repo.summary(), "suggestions": suggestions}
 
     @staticmethod
     def _user_feedback(item: dict, candidate: dict) -> str | None:

@@ -77,7 +77,6 @@ async def test_tool_list_contains_learning_tools(client):
         "approve_substitutions",
         "reject_substitutions",
         "list_substitution_suggestions",
-        "list_substitution_feedback",
     } <= names
 
 
@@ -125,9 +124,9 @@ async def test_05_rejection_is_persisted(client):
         suggestions=[{"id": suggestions["king oyster mushroom"]["id"], "feedback": "too chewy"}],
         constraints=CONSTRAINTS,
     )
-    rejected = await call(client, "list_substitution_feedback", accepted=False)
-    assert rejected["entries"][0]["target_ingredient"] == "king oyster mushroom"
-    assert rejected["entries"][0]["feedback"] == "too chewy"
+    rejected = (await call(client, "list_substitution_suggestions", status="rejected"))["suggestions"]
+    assert rejected[0]["target_ingredient"] == "king oyster mushroom"
+    assert rejected[0]["decisions"][0]["feedback"] == "too chewy"
     assert await call(client, "list_substitutions") == []
 
 
@@ -135,10 +134,12 @@ async def test_06_constraints_are_kept_in_feedback(client):
     suggestions = await record_halloumi(client)
     await call(client, "approve_substitutions", suggestions=[{"id": suggestions["vegan grilling cheese"]["id"]}])
     await call(client, "reject_substitutions", suggestions=[{"id": suggestions["king oyster mushroom"]["id"]}])
-    feedback = await call(client, "list_substitution_feedback")
+    listed = await call(client, "list_substitution_suggestions")
     expected = {"diet": "vegan", "excluded_ingredients": ["tofu"], "required_tags": ["nut free"]}
-    assert feedback["summary"] == {"total": 2, "accepted": 1, "rejected": 1}
-    assert all(entry["constraints"] == expected for entry in feedback["entries"])
+    assert listed["summary"] == {"total": 2, "accepted": 1, "rejected": 1}
+    decided = [row for row in listed["suggestions"] if row["decisions"]]
+    assert len(decided) == 2
+    assert all(row["constraints"] == expected for row in decided)
 
 
 async def test_07_feedback_is_not_duplicated(client):
@@ -149,7 +150,7 @@ async def test_07_feedback_is_not_duplicated(client):
     assert len(first["feedback_created"]) == 1
     assert second["feedback_created"] == []
     assert second["already_decided"][0]["id"] == suggestions["vegan grilling cheese"]["id"]
-    assert (await call(client, "list_substitution_feedback"))["summary"]["total"] == 1
+    assert (await call(client, "list_substitution_suggestions"))["summary"]["total"] == 1
 
 
 async def test_08_rejected_candidate_is_not_suggested_again(client):

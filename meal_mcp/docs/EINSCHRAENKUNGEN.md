@@ -1,4 +1,4 @@
-# Bekannte Einschränkungen (v1.1.0)
+# Bekannte Einschränkungen (v1.2.0)
 
 ## Nährwerte
 
@@ -49,10 +49,15 @@
 - Mit `diet` in den Constraints meldet `adapt_recipes` jede Zutat ohne Ersatzregel als fehlend,
   auch Gewürze.
 
+## Fotos
+
+- **Fotos gehören TheMealDB.** `download_recipe_images` speichert sie nur lokal. Wer ein Rezeptbuch
+  veröffentlicht, nennt TheMealDB als Quelle.
+- **Varianten haben kein eigenes Foto.** Eine vegane Variante zeigt das Foto des Originals.
+
 ## Installation und Betrieb
 
-- **Python-Paket:** braucht ein System-Python 3.11+ mit den Paketen aus `requirements.txt`.
-- **uv-Paket:** in Claude Desktop unter Windows und macOS getestet, aber nicht auf einem Rechner ganz
+- **Paket:** in Claude Desktop unter Windows und macOS getestet, aber nicht auf einem Rechner ganz
   ohne Python. Der erste Start braucht Internet für die Abhängigkeiten.
 - **Ein laufender Chat** nutzt nach einer Neuinstallation weiter den alten Serverprozess.
 - **Datenbank:** Neue Spalten werden ergänzt, umbenannte oder gelöschte nicht migriert. Der Wechsel
@@ -66,4 +71,4 @@
 - **USDA-Limit:** 1.000 Anfragen pro Stunde und Key. Das Anreichern lädt pro Zutat eine Suche und
   einen Detaildatensatz; Ergebnisse werden zwischengespeichert.
 - Der volle Testablauf lief nur unter Windows 11 mit Claude Desktop 4.29; auf macOS (arm64) wurde
-  das uv-Paket mit Installation und Nährwertberechnung geprüft.
+  das Paket mit Installation und Nährwertberechnung geprüft.

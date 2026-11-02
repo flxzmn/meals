@@ -18,13 +18,6 @@ def save_adapted_recipes(variants: list[dict]) -> dict:
 
 
 @mcp.tool()
-def list_recipe_variants(source_mealdb_ids: list[str] | None = None) -> list[dict]:
-    """List saved recipe variants, optionally only those of the given original recipes."""
-    with session_scope() as session:
-        return VariantService(session).list_variants(source_mealdb_ids)
-
-
-@mcp.tool()
 def update_recipe_variants(updates: list[dict]) -> dict:
     """Edit several saved variants. Original recipes cannot be edited.
 

@@ -47,8 +47,10 @@ class SubstitutionRepo:
         }
 
     def add_bulk(self, substitutions: list[dict]) -> dict:
+        """Add substitutions. An existing pair keeps its rule; a given quantity_ratio or quantity_note updates it."""
         created: list[dict] = []
         existing: list[dict] = []
+        updated: list[dict] = []
         invalid: list[dict] = []
 
         for item in substitutions:
@@ -66,7 +68,15 @@ class SubstitutionRepo:
                 )
             )
             if row is not None:
-                existing.append(self._serialize(row))
+                if quantity["quantity_ratio"] is None and quantity["quantity_note"] is None:
+                    existing.append(self._serialize(row))
+                    continue
+                if quantity["quantity_ratio"] is not None:
+                    row.quantity_ratio = quantity["quantity_ratio"]
+                if quantity["quantity_note"] is not None:
+                    row.quantity_note = quantity["quantity_note"]
+                self.session.flush()
+                updated.append(self._serialize(row))
                 continue
 
             row = Substitution(
@@ -81,7 +91,7 @@ class SubstitutionRepo:
             self.session.flush()
             created.append(self._serialize(row))
 
-        return {"created": created, "existing": existing, "invalid": invalid}
+        return {"created": created, "existing": existing, "updated": updated, "invalid": invalid}
 
     def find_bulk(self, ingredients: Iterable[str]) -> dict[str, list[dict]]:
         normalized = list(dict.fromkeys(self._normalize(value) for value in ingredients if value and value.strip()))
@@ -98,34 +108,6 @@ class SubstitutionRepo:
         for row in rows:
             result[row.source_ingredient].append(self._serialize(row))
         return result
-
-    def set_quantities(self, rules: list[dict]) -> dict:
-        """Set quantity_ratio / quantity_note of existing substitutions."""
-        updated: list[dict] = []
-        missing: list[dict] = []
-        invalid: list[dict] = []
-        for item in rules:
-            source = self._normalize(str(item.get("source_ingredient", "")))
-            target = self._normalize(str(item.get("target_ingredient", "")))
-            quantity = quantity_fields(item)
-            if quantity is None or item.get("quantity_ratio") is None:
-                invalid.append(item)
-                continue
-            row = self.session.scalar(
-                select(Substitution).where(
-                    Substitution.source_ingredient == source,
-                    Substitution.target_ingredient == target,
-                )
-            )
-            if row is None:
-                missing.append({"source_ingredient": source, "target_ingredient": target})
-                continue
-            row.quantity_ratio = quantity["quantity_ratio"]
-            if quantity["quantity_note"] is not None:
-                row.quantity_note = quantity["quantity_note"]
-            updated.append(self._serialize(row))
-        self.session.flush()
-        return {"updated": updated, "missing": missing, "invalid": invalid}
 
     def list_all(self) -> list[dict]:
         rows = self.session.scalars(

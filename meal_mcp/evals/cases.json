@@ -56,6 +56,27 @@
     "checks": "Claude sieht erst nach und korrigiert dann über eine gespeicherte Regel."
   },
   {
+    "id": "rewrite-instructions",
+    "prompt": "Pass die Anleitung der Variante an die neuen Zutaten an.",
+    "required": ["rewrite_instructions", "save_rewritten_instructions"],
+    "forbidden": ["save_adapted_recipes", "delete_recipes"],
+    "checks": "Die neue Anleitung wird an der bestehenden Variante gespeichert, nicht als neue Variante."
+  },
+  {
+    "id": "label-values",
+    "prompt": "Seitan hat laut Etikett 140 kcal, 25 g Eiweiß, 2 g Fett und 5 g Kohlenhydrate pro 100 g. Speichere das.",
+    "required": ["set_ingredient_matches"],
+    "forbidden": ["add_substitutions"],
+    "checks": "Etikettwerte werden als Treffer gespeichert, nicht als Ersatzregel."
+  },
+  {
+    "id": "photos",
+    "prompt": "Lade die Fotos meiner gespeicherten Rezepte in klein herunter.",
+    "required": ["download_recipe_images"],
+    "forbidden": ["save_recipes", "search_recipes"],
+    "checks": "Die Fotos kommen über das Tool, nicht über einen Browser oder eine neue Suche."
+  },
+  {
     "id": "backup",
     "prompt": "Sichere meine Rezepte und Regeln in einer Datei.",
     "required": ["export_data"],
@@ -65,7 +86,7 @@
   {
     "id": "read-only-question",
     "prompt": "Welche Rezepte habe ich gespeichert?",
-    "required": [["list_recipes", "list_recipe_variants"]],
+    "required": [["list_recipes", "get_recipes"]],
     "forbidden": ["delete_recipes", "save_recipes", "search_recipes"],
     "checks": "Eine Frage löst keine Änderung aus."
   }

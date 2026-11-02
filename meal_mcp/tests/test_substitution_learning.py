@@ -249,11 +249,12 @@ def test_user_reason_is_stored_as_feedback():
     service.reject_substitutions([{"id": suggestions[0]["id"], "reason": "mag ich nicht"}])
     service.approve_substitutions([{"id": suggestions[1]["id"], "reason": suggestions[1]["reason"]}])
 
-    entries = {entry["target_ingredient"]: entry for entry in service.list_feedback()["entries"]}
-    rejected = entries[suggestions[0]["target_ingredient"]]
-    assert rejected["feedback"] == "mag ich nicht"
-    assert rejected["suggestion_reason"] == "Similar grilling behavior and texture"
-    assert entries[suggestions[1]["target_ingredient"]]["feedback"] is None
+    listed = {row["target_ingredient"]: row for row in service.list_suggestions()["suggestions"]}
+    rejected = listed[suggestions[0]["target_ingredient"]]
+    assert rejected["decisions"][0]["feedback"] == "mag ich nicht"
+    assert rejected["decisions"][0]["accepted"] is False
+    assert rejected["reason"] == "Similar grilling behavior and texture"
+    assert listed[suggestions[1]["target_ingredient"]]["decisions"][0]["feedback"] is None
 
 
 def test_feedback_can_be_added_after_decision():
@@ -270,9 +271,9 @@ def test_feedback_can_be_added_after_decision():
     assert approve_rejected["feedback_updated"] == []
     assert len(approve_rejected["already_decided"]) == 1
 
-    feedback = service.list_feedback()
-    assert feedback["summary"]["total"] == 1
-    assert feedback["entries"][0]["feedback"] == "styroporartig"
+    listed = service.list_suggestions("rejected")
+    assert listed["summary"]["total"] == 1
+    assert listed["suggestions"][0]["decisions"][0]["feedback"] == "styroporartig"
 
 
 def test_approved_substitution_is_tagged_as_llm_suggested():

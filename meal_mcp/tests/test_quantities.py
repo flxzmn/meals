@@ -81,19 +81,19 @@ def test_unconvertible_amount_is_kept_and_reported():
     assert [row["ingredient"] for row in result["unverified_quantities"]] == ["Eggs", "Honey"]
 
 
-def test_set_quantities_updates_existing_rule_and_rejects_bad_ratio():
+def test_adding_an_existing_pair_updates_its_quantity_rule():
     session = build_session()
     repo = SubstitutionRepo(session)
-    repo.add_bulk([{"source_ingredient": "butter", "target_ingredient": "olive oil"}])
-    result = repo.set_quantities([
+    repo.add_bulk([{"source_ingredient": "butter", "target_ingredient": "olive oil", "reason": "Fat"}])
+    result = repo.add_bulk([
         {"source_ingredient": "butter", "target_ingredient": "olive oil", "quantity_ratio": 0.8},
-        {"source_ingredient": "butter", "target_ingredient": "lard", "quantity_ratio": 1},
         {"source_ingredient": "butter", "target_ingredient": "olive oil", "quantity_ratio": -1},
+        {"source_ingredient": "butter", "target_ingredient": "olive oil"},
     ])
     assert result["updated"][0]["quantity_ratio"] == 0.8
-    assert result["missing"] == [{"source_ingredient": "butter", "target_ingredient": "lard"}]
     assert len(result["invalid"]) == 1
-    assert repo.list_all()[0]["quantity_ratio"] == 0.8
+    assert result["existing"][0]["quantity_ratio"] == 0.8
+    assert repo.list_all()[0]["reason"] == "Fat"
 
 
 def test_default_ratio_is_one():

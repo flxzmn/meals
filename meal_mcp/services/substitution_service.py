@@ -30,9 +30,6 @@ class SubstitutionService:
     def delete_substitutions(self, substitutions: list[dict]) -> dict:
         return self.substitution_repo.delete_bulk(substitutions)
 
-    def set_quantities(self, rules: list[dict]) -> dict:
-        return self.substitution_repo.set_quantities(rules)
-
     def list_substitutions(self) -> list[dict]:
         return self.substitution_repo.list_all()
 

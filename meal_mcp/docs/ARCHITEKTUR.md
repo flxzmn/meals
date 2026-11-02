@@ -2,7 +2,7 @@
 
 Meal MCP ist ein lokaler MCP-Server für Claude Desktop. Er sucht Rezepte bei TheMealDB, speichert
 sie in SQLite, reichert Zutaten mit Nährwerten aus USDA FoodData Central an und verwaltet eine
-lernende Wissensbasis für Zutatenersatz. Stand: v0.12.1.
+lernende Wissensbasis für Zutatenersatz. Stand: v1.2.0.
 
 ## Schichten
 
@@ -10,7 +10,7 @@ lernende Wissensbasis für Zutatenersatz. Stand: v0.12.1.
 Claude Desktop (LLM, Chat, Nutzerentscheidungen)
     │  MCP über STDIO
     ▼
-mcp_tools/      34 Tools. Nur Ein- und Ausgabe, keine Fachlogik.
+mcp_tools/      32 Tools. Nur Ein- und Ausgabe, keine Fachlogik.
     ▼
 services/       Fachlogik: Bulk-Verarbeitung, Filter, Umrechnung, Vergleich.
     ▼
@@ -34,7 +34,7 @@ direkt mit MCP und ein Repository nie mit einer externen API.
 | **Bulk-Tools mit Listen.** Fast jedes Tool nimmt mehrere Rezepte, Zutaten oder Regeln. | Weniger Tool-Aufrufe pro Chat, kürzere Antwortzeiten. |
 | **Varianten sind Rezepte mit `parent_id`.** | `enrich_recipes`, `get_nutrition`, `delete_recipes` und der Vergleich funktionieren ohne Sonderfälle. |
 | **Schätzungen bleiben sichtbar.** `grams_basis`, `estimated`, `coverage`, `uncovered_ingredients`. | Nährwerte aus Rezepttexten sind nie exakt; der Nutzer soll sehen, woher eine Zahl kommt. |
-| **Allowlist-Build.** Das Paket enthält nur Laufzeitdateien. | Keine `.env`, keine Datenbank, kein `.venv` im Paket (früher über 100 MB, jetzt ca. 50 KB). |
+| **Allowlist-Build.** Das Paket enthält nur Laufzeitdateien. | Keine `.env`, keine Datenbank, kein `.venv` im Paket (früher über 100 MB, jetzt ca. 170 KB). |
 
 ## Datenmodell
 
@@ -64,9 +64,23 @@ search_recipes → save_recipes → enrich_recipes → get_nutrition
                                       └─ Portionsgewichte (1 whole onion = 148 g)
 ```
 
-Mengen werden in dieser Reihenfolge in Gramm umgerechnet: Gewicht (exakt), Stück und Löffel über
-USDA-Portionsgewichte, übrige Volumen mit etwa 1 g/ml. Was sich nicht umrechnen lässt
-(„to taste“), bleibt sichtbar ungezählt.
+**Treffer.** Die USDA-Suche sortiert nach Textrelevanz, der erste Treffer ist oft ein Gericht
+(„Chicken, chicken roll, roasted“). `services/usda_matching.py` übersetzt deshalb zuerst
+(`TRANSLATIONS`: Hähnchen → chicken, courgette → zucchini), ordnet häufige Zutaten fest einem
+generischen USDA-Eintrag zu (`ALIASES`) und bewertet sonst alle Treffer: Jedes Wort der Zutat muss
+vorkommen, roh gewinnt, Gerichte, Marken und Verarbeitetes verlieren. Ohne plausiblen Treffer gilt
+die Zutat als fehlend statt falsch. Treffer werden zwischengespeichert; nach einer Änderung am
+Matching `enrich_recipes` mit `refresh=true`.
+
+**Mengen** werden in dieser Reihenfolge in Gramm umgerechnet (`grams_basis`):
+
+1. Gewicht (`1.2 kg`): exakt.
+2. Stück und Löffel (`5`, `8 cloves`, `1 tsp`): USDA-Portionsgewicht des Treffers, z. B.
+   `1 whole = 148 g`. Kennt USDA nur Teelöffel, werden Esslöffel und Tassen hochgerechnet.
+3. Übrige Volumen: etwa 1 g/ml (`estimated_volume_conversions`).
+
+Was sich nicht umrechnen lässt („to taste“), bleibt sichtbar ungezählt. `estimated_grams` ist ein
+Zwischenspeicher und wird beim Start mit dem aktuellen Parser neu berechnet.
 
 ### Lernende Ersatz-Wissensbasis (Sprint 5)
 
@@ -97,24 +111,31 @@ rewrite_instructions ──► Claude schreibt Anleitung ──► save_rewritte
 update_recipe_variants (Handkorrektur) / compare_nutrition (Original gegen Variante)
 ```
 
+Ersatzmengen folgen dem `quantity_ratio` der Regel (Gramm Ersatz pro Gramm Original): Gewicht und
+Volumen werden skaliert, Stückzahlen über das Portionsgewicht des Originals in Gramm umgerechnet
+(„4 chicken breasts“ → 696 g Kichererbsen statt „4 chickpeas“). Ein Vergleich mit einem Ersatz ohne
+Nährwerte meldet `comparable: false`, weil der Ersatz sonst als 0 zählen würde.
+
 ### USDA-Treffer korrigieren (Sprint 10)
 
 ```
 list_ingredient_matches ──► falscher Treffer?
      ├─ reject_ingredient_matches ──► nächstbester Treffer oder no_alternative
-     └─ search_usda_foods ──► set_ingredient_matches (fdc_id)
+     └─ search_usda_foods ──► set_ingredient_matches (fdc_id oder Etikettwerte)
 ```
+
+Entscheidungen stehen in `ingredient_match_rules` und überstehen `enrich_recipes` mit `refresh=true`.
 
 ## Tools nach Bereich
 
 | Bereich | Tools |
 |---|---|
-| Rezepte | `search_recipes`, `save_recipes`, `list_recipes`, `get_recipes`, `delete_recipes` |
+| Rezepte | `search_recipes`, `save_recipes`, `list_recipes`, `get_recipes`, `delete_recipes`, `download_recipe_images` |
 | Nährwerte | `enrich_recipes`, `get_nutrition`, `calculate_nutrition`, `compare_nutrition` |
 | USDA-Treffer | `search_usda_foods`, `list_ingredient_matches`, `set_ingredient_matches`, `reject_ingredient_matches` |
-| Ersatzregeln | `add_substitutions`, `find_substitutions`, `list_substitutions`, `delete_substitutions`, `set_substitution_quantities`, `adapt_recipes` |
-| Lernen | `suggest_substitutions`, `record_substitution_suggestions`, `approve_substitutions`, `reject_substitutions`, `list_substitution_suggestions`, `list_substitution_feedback` |
-| Varianten | `save_adapted_recipes`, `list_recipe_variants`, `update_recipe_variants`, `rewrite_instructions`, `save_rewritten_instructions` |
+| Ersatzregeln | `add_substitutions`, `find_substitutions`, `list_substitutions`, `delete_substitutions`, `adapt_recipes` |
+| Lernen | `suggest_substitutions`, `record_substitution_suggestions`, `approve_substitutions`, `reject_substitutions`, `list_substitution_suggestions` |
+| Varianten | `save_adapted_recipes`, `update_recipe_variants`, `rewrite_instructions`, `save_rewritten_instructions` |
 | Portionen | `set_recipe_servings`, `scale_recipes` |
 | Daten | `export_data`, `import_data` |
 

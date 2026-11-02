@@ -1,4 +1,4 @@
-# MCPB-Pakete bauen
+# MCPB-Paket bauen
 
 ## Entwicklungsumgebung
 
@@ -6,8 +6,7 @@
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-python -m pip install uv          # nur für das uv-Paket und dessen Release-Test
-dotnet tool install -g mcpb       # mcpb-CLI (getestet: 0.3.5)
+python -m pip install uv          # für uv lock und den Release-Test
 Copy-Item .env.example .env       # eigenen USDA-Key eintragen, .env nie committen
 ```
 
@@ -23,29 +22,26 @@ Copy-Item .env.example .env       # eigenen USDA-Key eintragen, .env nie committ
    python scripts/build_mcpb.py --sync-manifest
    ```
    Ohne Tool-Änderung reicht `python scripts/build_mcpb.py`.
-4. Release-Test (baut beide Pakete, prüft Inhalt, Manifest, Key und Serverstart):
+4. Release-Test (baut das Paket, prüft Inhalt, Manifest, Key und Serverstart mit uv):
    ```powershell
    python -m pytest -m release
    ```
-5. Manueller Test in Claude Desktop nach [RELEASE_TEST.md](RELEASE_TEST.md).
+5. Kurztest in Claude Desktop nach [RELEASE_TEST.md](RELEASE_TEST.md).
 
-Ergebnis:
-
-- `dist/meal-<version>-uv.mcpb`: empfohlen, Servertyp `uv` (manifest 0.4), vom Skript selbst gezippt,
-  weil die CLI 0.3.5 den Typ `uv` noch ablehnt
-- `dist/meal-<version>.mcpb`: Ausweichweg, Servertyp `python`, gepackt mit der mcpb-CLI
+Ergebnis ist `dist/meal-<version>.mcpb` mit Servertyp `uv` (manifest 0.4). Das Skript zippt es
+selbst, weil die mcpb-CLI 0.3.5 den Typ `uv` ablehnt; die CLI wird nicht gebraucht.
 
 ## Was ins Paket kommt
 
 Das Skript arbeitet mit einer Allowlist (`RUNTIME_FILES`, `RUNTIME_PACKAGES` in
-`scripts/build_mcpb.py`): `main.py`, `manifest.json`, `README.md`, `icon.png`, `config/`, `db/`, `repo/`,
-`services/`, `mcp_tools/`, dazu `requirements.txt` (Python-Paket) bzw. `pyproject.toml` und
-`uv.lock` (uv-Paket). Alles andere bleibt draußen: `.env`, `.venv`, Datenbank, Tests, alte Pakete.
+`scripts/build_mcpb.py`): `main.py`, `manifest.json`, `README.md`, `icon.png`, `LICENSE`,
+`pyproject.toml`, `uv.lock`, `config/`, `db/`, `repo/`, `services/`, `mcp_tools/`. Alles andere
+bleibt draußen: `.env`, `.venv`, Datenbank, Tests, alte Pakete.
 
 ## Abhängigkeiten ändern
 
-Laufzeitabhängigkeiten stehen zweimal: `requirements.txt` (Python-Paket, Entwicklung) und
-`pyproject.toml` (uv-Paket). Nach einer Änderung beide anpassen und die Sperrdatei erneuern:
+Laufzeitabhängigkeiten stehen zweimal: `requirements.txt` (Entwicklung) und `pyproject.toml`
+(Paket). Nach einer Änderung beide anpassen und die Sperrdatei erneuern:
 
 ```powershell
 uv lock

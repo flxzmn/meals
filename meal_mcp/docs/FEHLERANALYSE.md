@@ -172,8 +172,8 @@ Hinweis daneben genügt nicht.
 **Ursache:** Das Python-Paket enthält keine Abhängigkeiten; Claude Desktop nutzt das System-Python.
 
 **Behebung:** uv-Paket mit `pyproject.toml` und `uv.lock` (v0.11); auf dem Mac mit Claude Desktop
-getestet: Der Host startet sein eigenes uv statt `/usr/bin/python3`. Siehe
-[INSTALLATION.md](INSTALLATION.md).
+getestet: Der Host startet sein eigenes uv statt `/usr/bin/python3`. Seit v1.2 gibt es nur noch
+dieses Paket. Siehe [INSTALLATION.md](INSTALLATION.md).
 
 ## 14. Brüche als ganze Einheit gerechnet
 

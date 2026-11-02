@@ -1,10 +1,10 @@
 {
-  "manifest_version": "0.2",
+  "manifest_version": "0.4",
   "name": "meal",
   "display_name": "Meal MCP",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Rezepte finden, Nährwerte berechnen und Gerichte an deine Ernährung anpassen, mit einer Ersatz-Wissensbasis, die aus deinen Entscheidungen lernt.",
-  "long_description": "**Meal MCP** macht aus Claude einen Küchenassistenten mit Gedächtnis: Rezepte finden, Nährwerte berechnen und Gerichte an deine Ernährung anpassen.\n\n**Was du damit machen kannst**\n\n- **Rezepte** aus TheMealDB suchen und lokal speichern\n- **Nährwerte** mit USDA-Daten berechnen, auch ohne gespeichertes Rezept und mit deutschen Zutatennamen\n- **Zutaten ersetzen**: Claude schlägt vor, du entscheidest; freigegebene Regeln werden wiederverwendet, abgelehnte Vorschläge kommen nicht wieder\n- **Varianten** speichern, zum Beispiel vegan oder ohne Nüsse, mit angepassten Mengen und umgeschriebener Anleitung\n- **Vergleichen**: Original und Variante nebeneinander, Zutat für Zutat\n- **Korrigieren**: falsche USDA-Treffer sperren oder Werte vom Etikett eintragen\n- **Portionen**: Nährwerte pro Portion und Mengen für eine andere Personenzahl\n- **Sichern**: alles als Datei exportieren und wieder einlesen\n\n**So probierst du es aus**\n\n- „Suche Chicken Handi, speichere es und berechne die Nährwerte.“\n- „Mach das Rezept vegan und speichere die Variante.“\n- „Vergleiche die Nährwerte der Variante mit dem Original.“\n\n**Du brauchst** einen eigenen, kostenlosen USDA-API-Key (https://fdc.nal.usda.gov/api-key-signup). Claude Desktop fragt bei der Installation danach.\n\n**Gut zu wissen:** Rezepte, Regeln und Varianten liegen in einer lokalen Datenbank auf deinem Rechner. Sie liegt außerhalb der Erweiterung und übersteht eine Neuinstallation. Suchanfragen gehen an TheMealDB und USDA, Tool-Ergebnisse wie jeder Chatinhalt an Claude. Nährwerte sind Schätzungen. Tags wie „nussfrei“ ersetzen nicht den Blick aufs Etikett, und bei Allergien ist das keine verlässliche Grundlage.",
+  "long_description": "**Meal MCP** macht aus Claude einen Küchenassistenten mit Gedächtnis: Rezepte finden, Nährwerte berechnen und Gerichte an deine Ernährung anpassen.\n\n**Was du damit machen kannst**\n\n- **Rezepte** aus TheMealDB suchen und lokal speichern, mit Fotos als Dateien\n- **Nährwerte** mit USDA-Daten berechnen, auch ohne gespeichertes Rezept und mit deutschen Zutatennamen\n- **Zutaten ersetzen**: Claude schlägt vor, du entscheidest; freigegebene Regeln werden wiederverwendet, abgelehnte Vorschläge kommen nicht wieder\n- **Varianten** speichern, zum Beispiel vegan oder ohne Nüsse, mit angepassten Mengen und umgeschriebener Anleitung\n- **Vergleichen**: Original und Variante nebeneinander, Zutat für Zutat\n- **Korrigieren**: falsche USDA-Treffer sperren oder Werte vom Etikett eintragen\n- **Portionen**: Nährwerte pro Portion und Mengen für eine andere Personenzahl\n- **Sichern**: alles als Datei exportieren und wieder einlesen\n\n**So probierst du es aus**\n\n- „Suche Chicken Handi, speichere es und berechne die Nährwerte.“\n- „Mach das Rezept vegan und speichere die Variante.“\n- „Vergleiche die Nährwerte der Variante mit dem Original.“\n\n**Du brauchst** einen eigenen, kostenlosen USDA-API-Key (https://fdc.nal.usda.gov/api-key-signup). Claude Desktop fragt bei der Installation danach.\n\n**Gut zu wissen:** Rezepte, Regeln und Varianten liegen in einer lokalen Datenbank auf deinem Rechner. Sie liegt außerhalb der Erweiterung und übersteht eine Neuinstallation. Suchanfragen gehen an TheMealDB und USDA, Tool-Ergebnisse wie jeder Chatinhalt an Claude. Nährwerte sind Schätzungen. Tags wie „nussfrei“ ersetzen nicht den Blick aufs Etikett, und bei Allergien ist das keine verlässliche Grundlage.",
   "author": {
     "name": "Felix Zimmermann",
     "url": "https://github.com/flxzmn"
@@ -18,12 +18,15 @@
   "support": "https://github.com/flxzmn/meals/issues",
   "icon": "icon.png",
   "server": {
-    "type": "python",
+    "type": "uv",
     "entry_point": "main.py",
     "mcp_config": {
-      "command": "python",
+      "command": "uv",
       "args": [
-        "${__dirname}/main.py"
+        "run",
+        "--directory",
+        "${__dirname}",
+        "main.py"
       ],
       "env": {
         "USDA_API_KEY": "${user_config.usda_api_key}"
@@ -46,7 +49,7 @@
     },
     {
       "name": "add_substitutions",
-      "description": "Add several ingredient substitutions to the local knowledge base.\n\nOptional per item: quantity_ratio (grams of target per gram of source, default 1.0) and\nquantity_note (e.g. \"1 egg = 1 tbsp ground flaxseed + 3 tbsp water\")."
+      "description": "Add several ingredient substitutions to the local knowledge base, or change their quantity rule.\n\nOptional per item: quantity_ratio (grams of target per gram of source, default 1.0) and\nquantity_note (e.g. \"1 egg = 1 tbsp ground flaxseed + 3 tbsp water\"). For an existing pair they\nreplace the stored rule (listed in updated); adapt_recipes uses the ratio for substitute amounts."
     },
     {
       "name": "approve_substitutions",
@@ -54,7 +57,7 @@
     },
     {
       "name": "calculate_nutrition",
-      "description": "Calculate nutrition of free ingredients without a saved recipe: [{name, measure}], e.g.\n[{\"name\": \"Hähnchen\", \"measure\": \"500 g\"}, {\"name\": \"Zwiebeln\", \"measure\": \"2\"}].\n\nUses the same USDA matching, portion weights and manual rules as recipes. German names work.\nWith servings the result also contains per_serving."
+      "description": "Calculate nutrition of free ingredients without a saved recipe: [{name, measure}], e.g.\n[{\"name\": \"Hähnchen\", \"measure\": \"500 g\"}, {\"name\": \"Zwiebeln\", \"measure\": \"2\"}].\n\nUses the same USDA matching, portion weights and manual rules as recipes. Common German names\nare translated; English names match more reliably. Check usda_match in ingredient_breakdown and\nfix wrong matches with set_ingredient_matches. With servings the result also contains per_serving."
     },
     {
       "name": "compare_nutrition",
@@ -67,6 +70,10 @@
     {
       "name": "delete_substitutions",
       "description": "Delete several substitutions identified by source and target ingredient."
+    },
+    {
+      "name": "download_recipe_images",
+      "description": "Save the photos of several saved recipes or variants as JPEG files, e.g. for a recipe book.\n\nsize: small (150 px, about 10 KB), medium (350 px, about 35 KB), large (500 px) or original\n(about 700 px). Without folder the files go\nto the images folder in the data folder; the result lists one path per recipe. Variants get the\nphoto of their original. Files already there are not downloaded again."
     },
     {
       "name": "enrich_recipes",
@@ -97,20 +104,12 @@
       "description": "List USDA matches of ingredients with their source (auto or manual), rejected foods and notes.\n\nWithout ingredients, lists all cached matches and rules."
     },
     {
-      "name": "list_recipe_variants",
-      "description": "List saved recipe variants, optionally only those of the given original recipes."
-    },
-    {
       "name": "list_recipes",
-      "description": "List all locally saved recipes and variants (is_variant, parent_mealdb_id, variant_ids)."
-    },
-    {
-      "name": "list_substitution_feedback",
-      "description": "List feedback for learned substitution suggestions."
+      "description": "List all locally saved recipes and variants (is_variant, parent_mealdb_id, variant_ids;\nvariants also constraints and change_count). Use get_recipes for details."
     },
     {
       "name": "list_substitution_suggestions",
-      "description": "List recorded suggestions, optionally filtered by status: pending, approved or rejected."
+      "description": "List recorded suggestions and the feedback on them, optionally filtered by status: pending,\napproved or rejected. Each suggestion has decisions (accepted, the user's feedback, date);\nsummary counts all approvals and rejections."
     },
     {
       "name": "list_substitutions",
@@ -163,10 +162,6 @@
     {
       "name": "set_recipe_servings",
       "description": "Store how many servings recipes make: [{mealdb_id, servings}]. Variants inherit the value of\ntheir original unless they have their own.\n\nTheMealDB has no servings: use what the user says or what the instructions state, do not guess.\nget_nutrition and compare_nutrition then also return per_serving."
-    },
-    {
-      "name": "set_substitution_quantities",
-      "description": "Set the quantity rule of several existing substitutions.\n\nEach item: source_ingredient, target_ingredient, quantity_ratio (grams of target per gram of\nsource) and optional quantity_note. adapt_recipes uses the ratio to compute substitute amounts."
     },
     {
       "name": "suggest_substitutions",

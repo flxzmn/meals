@@ -1,4 +1,4 @@
-# Entwicklungsstände v0.2 bis v0.12
+# Entwicklungsstände
 
 | Version | Sprint | Inhalt | Neue Tools | Status |
 |---|---|---|---|---|
@@ -19,6 +19,7 @@
 | v0.12.1 | – | Befunde behoben: ehrlicher Vergleich, Etikettwerte, Berechnung ohne Rezept, Fehlalarm bei Anleitungen | `calculate_nutrition` | uv-Paket auf Windows und macOS bestanden |
 | v1.0.0 | – | Manifest für den Release: Name, Beschreibung, Autor, Links, Icon | – | in Claude Desktop abgenommen |
 | v1.1.0 | – | Datenordner außerhalb der Erweiterung, Export und Import, Portionen, Evals. Mengen-Parser (Brüche, Behälter, `2 x 400g`), Treffer, fehlende Energiewerte, kompakte Ausgabe, Zeitlimit beim Anreichern, versteckte Zutaten | `set_recipe_servings`, `scale_recipes`, `export_data`, `import_data` | automatisch und live gegen USDA getestet |
+| v1.2.0 | – | Rezeptfotos als Dateien (Idee aus dem Rezeptbuch-Lauf). Verschlankt: nur noch das uv-Paket; `list_recipe_variants`, `set_substitution_quantities` und `list_substitution_feedback` in `list_recipes`, `add_substitutions` und `list_substitution_suggestions` aufgegangen; kürzeres README und kürzerer Release-Test | `download_recipe_images` | automatisch und live gegen TheMealDB getestet |
 
 „Automatisch getestet“: Unit-Tests, MCP-Abnahmetest und Release-Test grün. Die Stände v0.6 bis v0.11
 wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROTOKOLL.md](TESTPROTOKOLL.md)).
@@ -36,6 +37,7 @@ wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROT
 | v0.11 | Auslieferung ist Teil des Produkts: gleiche Software, zwei Pakete, unterschiedliche Voraussetzungen. |
 | v1.0 → v1.1 | Ein Lauf über 51 echte Rezepte fand mehr Rechenfehler als alle Abnahmen zuvor. Siehe [FEHLERANALYSE.md](FEHLERANALYSE.md), Fall 14. |
 | v1.1 | Evals schließen die Lücke zwischen grünen Tests und dem Verhalten im Chat: Geprüft wird, was das LLM mit den Tools tut. |
+| v1.1 → v1.2 | Weglassen ist Arbeit: Drei Tools waren Teilmengen anderer, ein Paket wurde nicht mehr getestet. Jedes Tool kostet Kontext und eine Wahl für das LLM, jedes Paket einen Testpfad. |
 
 ## Testumfang
 
@@ -47,3 +49,4 @@ wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROT
 | v0.12.0 | 125 | 10 |
 | v0.12.1 | 132 | 10 |
 | v1.1.0 | 279 | 12 |
+| v1.2.0 | 285 | 10 |

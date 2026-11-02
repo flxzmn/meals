@@ -97,10 +97,3 @@ class RecipeRepo:
         self.session.flush()  # free the (recipe_id, position) pairs before inserting
         recipe.ingredients.extend(Ingredient(**row) for row in ingredients)
         self.session.flush()
-
-    def list_variants(self, parent_mealdb_ids: list[str] | None = None) -> list[Recipe]:
-        statement = select(Recipe).options(selectinload(Recipe.ingredients)).where(Recipe.parent_id.is_not(None))
-        if parent_mealdb_ids:
-            parent_ids = select(Recipe.id).where(Recipe.mealdb_id.in_(parent_mealdb_ids))
-            statement = statement.where(Recipe.parent_id.in_(parent_ids))
-        return list(self.session.scalars(statement.order_by(Recipe.mealdb_id)).all())

@@ -72,9 +72,9 @@ async def adapt_and_save(client, ids=("100",)) -> dict:
 
 async def test_tool_list_contains_variant_tools(client):
     names = {tool.name for tool in await client.list_tools()}
-    assert {"save_adapted_recipes", "list_recipe_variants", "update_recipe_variants", "get_recipes",
-            "rewrite_instructions", "save_rewritten_instructions", "set_substitution_quantities",
-            "compare_nutrition"} <= names
+    assert {"save_adapted_recipes", "update_recipe_variants", "get_recipes",
+            "rewrite_instructions", "save_rewritten_instructions", "compare_nutrition"} <= names
+    assert not {"list_recipe_variants", "set_substitution_quantities", "list_substitution_feedback"} & names
 
 
 async def test_01_adapted_recipe_is_saved_with_own_id(client):
@@ -105,10 +105,9 @@ async def test_03_constraints_and_changes_are_stored(client):
 
 async def test_04_variant_is_shown_again_later(client):
     await adapt_and_save(client)
-    listed = await call(client, "list_recipe_variants", source_mealdb_ids=["100"])
-    assert [row["mealdb_id"] for row in listed] == ["100-v1"]
-    recipes = {row["mealdb_id"] for row in await call(client, "list_recipes")}
-    assert {"100", "100-v1"} <= recipes
+    recipes = {row["mealdb_id"]: row for row in await call(client, "list_recipes")}
+    assert recipes["100"]["variant_ids"] == ["100-v1"]
+    assert recipes["100-v1"]["constraints"] == CONSTRAINTS
 
 
 async def test_05_variant_can_be_edited(client):
@@ -139,7 +138,7 @@ async def test_07_same_variant_is_not_saved_twice(client):
     await adapt_and_save(client)
     again = await adapt_and_save(client)
     assert again["status"] == "existing"
-    assert len(await call(client, "list_recipe_variants")) == 1
+    assert sum(row["is_variant"] for row in await call(client, "list_recipes")) == 1
 
 
 async def test_08_bulk_save_of_several_recipes(client):
@@ -233,7 +232,7 @@ async def test_s8_01_piece_count_is_converted_to_grams(client):
 
 
 async def test_s8_02_ratio_rule_per_pair_is_used_and_saved_in_variant(client):
-    updated = await call(client, "set_substitution_quantities", rules=[
+    updated = await call(client, "add_substitutions", substitutions=[
         {"source_ingredient": "chicken", "target_ingredient": "tempeh", "quantity_ratio": 0.8,
          "quantity_note": "Tempeh is denser than chicken."},
     ])

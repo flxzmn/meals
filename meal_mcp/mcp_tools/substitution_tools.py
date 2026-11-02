@@ -5,10 +5,11 @@ from services.substitution_service import SubstitutionService
 
 @mcp.tool()
 def add_substitutions(substitutions: list[dict]) -> dict:
-    """Add several ingredient substitutions to the local knowledge base.
+    """Add several ingredient substitutions to the local knowledge base, or change their quantity rule.
 
     Optional per item: quantity_ratio (grams of target per gram of source, default 1.0) and
-    quantity_note (e.g. "1 egg = 1 tbsp ground flaxseed + 3 tbsp water").
+    quantity_note (e.g. "1 egg = 1 tbsp ground flaxseed + 3 tbsp water"). For an existing pair they
+    replace the stored rule (listed in updated); adapt_recipes uses the ratio for substitute amounts.
     """
     with session_scope() as session:
         return SubstitutionService(session).add_substitutions(substitutions)
@@ -26,17 +27,6 @@ def list_substitutions() -> list[dict]:
     """List all substitutions in the local knowledge base."""
     with session_scope() as session:
         return SubstitutionService(session).list_substitutions()
-
-
-@mcp.tool()
-def set_substitution_quantities(rules: list[dict]) -> dict:
-    """Set the quantity rule of several existing substitutions.
-
-    Each item: source_ingredient, target_ingredient, quantity_ratio (grams of target per gram of
-    source) and optional quantity_note. adapt_recipes uses the ratio to compute substitute amounts.
-    """
-    with session_scope() as session:
-        return SubstitutionService(session).set_quantities(rules)
 
 
 @mcp.tool()

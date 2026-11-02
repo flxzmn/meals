@@ -111,8 +111,6 @@ def test_original_recipe_cannot_be_edited():
 def test_variants_are_listed_per_original():
     session = build_session()
     VariantService(session).save_variants([adapted(session)])
-    assert [row["mealdb_id"] for row in VariantService(session).list_variants(["test-1"])] == ["test-1-v1"]
-    assert VariantService(session).list_variants(["other"]) == []
     listed = {row["mealdb_id"]: row for row in RecipeService(session).list_recipes()}
     assert listed["test-1"]["variant_ids"] == ["test-1-v1"]
     assert listed["test-1-v1"]["parent_mealdb_id"] == "test-1"
