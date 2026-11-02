@@ -55,6 +55,8 @@ ALIASES = {
     "chickpeas": "Chickpeas (garbanzo beans, bengal gram), mature seeds, canned, drained solids",
     "dried chickpeas": "Chickpeas (garbanzo beans, bengal gram), mature seeds, raw",
     "eggplant": "Eggplant, raw",
+    "sweet potato": "Sweet potato, raw, unprepared (Includes foods for USDA's Food Distribution Program)",
+    "sweet potatoes": "Sweet potato, raw, unprepared (Includes foods for USDA's Food Distribution Program)",
     "zucchini": "Squash, summer, zucchini, includes skin, raw",
     "green onions": "Onions, spring or scallions (includes tops and bulb), raw",
     "baking soda": "Leavening agents, baking soda",

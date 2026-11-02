@@ -20,6 +20,7 @@
 | v1.0.0 | – | Manifest für den Release: Name, Beschreibung, Autor, Links, Icon | – | in Claude Desktop abgenommen |
 | v1.1.0 | – | Datenordner außerhalb der Erweiterung, Export und Import, Portionen, Evals. Mengen-Parser (Brüche, Behälter, `2 x 400g`), Treffer, fehlende Energiewerte, kompakte Ausgabe, Zeitlimit beim Anreichern, versteckte Zutaten | `set_recipe_servings`, `scale_recipes`, `export_data`, `import_data` | automatisch und live gegen USDA getestet |
 | v1.2.0 | – | Rezeptfotos als Dateien (Idee aus dem Rezeptbuch-Lauf). Verschlankt: nur noch das uv-Paket; `list_recipe_variants`, `set_substitution_quantities` und `list_substitution_feedback` in `list_recipes`, `add_substitutions` und `list_substitution_suggestions` aufgegangen; kürzeres README und kürzerer Release-Test | `download_recipe_images` | automatisch und live gegen TheMealDB getestet |
+| v1.2.1 | – | Befunde aus dem Release-Test von 1.2.0: Gewicht in Klammern zählt als gemessen, „3 Large“ nimmt „large“ statt „extra large“, Süßkartoffel roh statt kandiert. Die 30 Startregeln aus `data/substitutions_seed.json` werden in eine unbenutzte Wissensbasis geladen (lagen seit v1.0 ungenutzt im Repo) | – | automatisch und live gegen USDA getestet |
 
 „Automatisch getestet“: Unit-Tests, MCP-Abnahmetest und Release-Test grün. Die Stände v0.6 bis v0.11
 wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROTOKOLL.md](TESTPROTOKOLL.md)).
@@ -50,3 +51,4 @@ wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROT
 | v0.12.1 | 132 | 10 |
 | v1.1.0 | 279 | 12 |
 | v1.2.0 | 285 | 10 |
+| v1.2.1 | 295 | 10 |

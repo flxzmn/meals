@@ -29,7 +29,7 @@ STAGE_DIR = BASE_DIR / "build" / "mcpb"
 DIST_DIR = BASE_DIR / "dist"
 
 RUNTIME_FILES = ["main.py", "manifest.json", "README.md", "icon.png", "LICENSE", "pyproject.toml", "uv.lock"]
-RUNTIME_PACKAGES = ["config", "db", "repo", "services", "mcp_tools"]
+RUNTIME_PACKAGES = ["config", "db", "repo", "services", "mcp_tools", "data"]
 
 
 def stage(target: Path) -> None:

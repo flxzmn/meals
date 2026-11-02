@@ -52,3 +52,33 @@ def test_missing_portions_column_is_added_to_old_database(tmp_path):
     add_missing_columns(engine)
     add_missing_columns(engine)  # idempotent
     assert "portions" in {column["name"] for column in inspect(engine).get_columns("nutrition_cache")}
+
+
+def test_seed_rules_start_an_unused_knowledge_base(tmp_path):
+    from sqlalchemy.orm import sessionmaker
+
+    from db.db import SEED_FILE, load_seed_substitutions
+    from repo.substitution_repo import SubstitutionRepo
+    from services.substitution_learning_service import SubstitutionLearningService
+
+    engine = create_engine(f"sqlite:///{tmp_path / 'seed.db'}")
+    Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+    assert load_seed_substitutions(factory) == 30
+    assert load_seed_substitutions(factory) == 0
+
+    with factory() as session:
+        rules = SubstitutionRepo(session).find_bulk(["milk"])["milk"]
+        assert rules[0]["target_ingredient"] == "oat milk"
+        SubstitutionRepo(session).delete_bulk(SubstitutionRepo(session).list_all())
+        session.commit()
+    assert load_seed_substitutions(factory) == 30  # never used: deleted rules come back
+
+    with factory() as session:
+        SubstitutionRepo(session).delete_bulk(SubstitutionRepo(session).list_all())
+        learning = SubstitutionLearningService(session)
+        learning.record_suggestions([{"source_ingredient": "milk", "target_ingredient": "soy milk"}])
+        session.commit()
+    assert load_seed_substitutions(factory) == 0  # worked with: no rules forced on the user
+    assert load_seed_substitutions(factory, tmp_path / "missing.json") == 0
+    assert SEED_FILE.exists()

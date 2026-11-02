@@ -463,3 +463,44 @@ def test_cup_of_cream_is_liquid_not_whipped():
 def test_plain_cup_wins_over_a_prepared_form():
     portions = [{"unit": "cup, chopped", "grams": 160.0}, {"unit": "cup", "grams": 100.0}]
     assert ingredient_grams("1 cup", 240.0, portions)[0] == 100.0
+
+
+# Release test of 1.2.0 (second Weltküche run).
+
+
+@pytest.mark.parametrize("measure, grams", [
+    ("2 (460g)", 460.0),
+    ("3 rashers (100g) chopped", 100.0),
+    ("1 (150 g)", 150.0),
+    ("1 (14 oz) can", 396.893),
+])
+def test_mass_in_brackets_is_measured(measure, grams):
+    assert estimate_grams(measure) == grams
+    assert ingredient_grams(measure, estimate_grams(measure), [{"unit": "piece", "grams": 45.0}]) == (grams, "measured")
+
+
+def test_bracket_without_mass_is_no_measurement():
+    assert estimate_grams("2 (large)") is None
+
+
+def test_scaling_keeps_the_bracket_total_in_step():
+    assert scale_measure("2 (460g)", 1.5) == "3 (690 g)"
+
+
+def test_size_word_prefers_the_plain_size():
+    portions = [{"unit": "extra large", "grams": 56.0}, {"unit": "large", "grams": 50.0}, {"unit": "medium", "grams": 44.0}]
+    assert grams_from_portions("3 Large", portions) == (150.0, "USDA portion: 1 large = 50 g")
+
+
+def test_sweet_potatoes_are_raw_not_candied():
+    assert search_queries("sweet potatoes")[0] == ALIASES["sweet potato"]
+
+
+def test_substitute_for_a_bracket_mass_uses_the_grams():
+    from services.substitution_service import target_quantity
+    from types import SimpleNamespace
+
+    ingredient = SimpleNamespace(name="Chicken Legs", measure="2 (460g)", estimated_grams=460.0)
+    quantity = target_quantity(ingredient, {"quantity_ratio": 0.8}, None)
+    assert quantity["status"] == "adjusted"
+    assert quantity["target_measure"] == "368 g"

@@ -48,6 +48,9 @@ direkt mit MCP und ein Repository nie mit einer externen API.
 | `substitution_suggestions` | Vorschläge im Status `pending`, `approved`, `rejected` | v0.5.1 |
 | `substitution_feedback` | Entscheidungen mit Constraints, Hash und Nutzerbegründung | v0.5 |
 
+Eine unbenutzte Ersatz-Wissensbasis startet mit den Regeln aus `data/substitutions_seed.json`
+(`db.db.load_seed_substitutions`).
+
 Neue Spalten bestehender Tabellen legt `db.db.add_missing_columns` beim Start an
 (`ADDED_COLUMNS`). Neue Tabellen erzeugt `create_all`. Es gibt keine Migration für umbenannte oder
 gelöschte Spalten.

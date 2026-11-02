@@ -11,11 +11,15 @@
 - **„Pinch“ und „Dash“** zählen mit typischen 0,4 und 0,6 g. **„to taste“, „Bunch“, „Handful“** werden nicht
   gezählt (`uncovered_ingredients`).
 - **Behälter** („1 can“, „1 Packet“, „1 pot“) werden nicht geschätzt, denn ihre Größe steht nicht im
-  Rezept. Sie bleiben ungezählt, auch wenn sie eine Hauptzutat sind. Abhilfe: Menge in Gramm eintragen.
+  Rezept. Sie bleiben ungezählt, auch wenn sie eine Hauptzutat sind. Abhilfe: Menge in Gramm eintragen. Ein Gewicht in
+  Klammern zählt dagegen als gemessen und als Summe der Zeile („1 (400 g) can“, „3 rashers (100g)“).
 - **Abdeckung zählt Zutaten, nicht Gewicht.** Fehlende Lorbeerblätter senken sie genauso wie fehlende Bohnen.
   Welche Zutat fehlt, steht in `uncovered_ingredients`.
 - **`hidden_ingredients`** findet nur Zutaten, für die es eine Ersatzregel gibt. Fisch in einer
   Sushi-Anleitung bleibt ohne Regel unsichtbar.
+- **Startregeln:** Eine unbenutzte Wissensbasis (keine Regeln, Vorschläge oder Entscheidungen) bekommt beim
+  Start die 30 Regeln aus `data/substitutions_seed.json`. Wer alle Regeln löscht, ohne je einen Vorschlag
+  entschieden zu haben, bekommt sie beim nächsten Start wieder.
 - **Eine Ersatzregel gilt für jede Verwendung.** Gekochte Eier und Eier im Teig bekommen denselben Ersatz.
 - **Mehrdeutige Rezeptangaben** bleiben mehrdeutig: „Chicken 1.2 kg“ kann mit oder ohne Knochen
   gemeint sein. Gerechnet wird mit Fleisch und Haut, roh.
@@ -27,7 +31,9 @@
   Sichuanpfeffer) zählen erst, wenn Etikettwerte mit
   `set_ingredient_matches` gespeichert sind. Bis dahin meldet `compare_nutrition` `comparable: false`.
 - **Portionsgewichte passen nicht immer zur Küche:** Grüne Chili zählt mit 45 g (US-Chili), eine
-  indische wiegt eher 5 g.
+  indische wiegt eher 5 g. Kennt USDA nur eine Größe, gilt sie auch für „1 large“ (Süßkartoffel: 130 g).
+- **Eine Zutat, ein Treffer:** „Coriander“ ist immer frisches Grün, auch bei „1/2 tsp“, wo gemahlener
+  Samen gemeint ist. Abhilfe: `set_ingredient_matches` oder „ground coriander“ im Rezept.
 - **Übersetzungen** decken nur eine Liste gängiger deutscher und britischer Begriffe ab
   (`TRANSLATIONS`). Unbekannte deutsche Namen bleiben `nutrition_missing`, englische Namen treffen
   sicherer.

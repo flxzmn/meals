@@ -35,7 +35,7 @@ selbst, weil die mcpb-CLI 0.3.5 den Typ `uv` ablehnt; die CLI wird nicht gebrauc
 
 Das Skript arbeitet mit einer Allowlist (`RUNTIME_FILES`, `RUNTIME_PACKAGES` in
 `scripts/build_mcpb.py`): `main.py`, `manifest.json`, `README.md`, `icon.png`, `LICENSE`,
-`pyproject.toml`, `uv.lock`, `config/`, `db/`, `repo/`, `services/`, `mcp_tools/`. Alles andere
+`pyproject.toml`, `uv.lock`, `config/`, `db/`, `repo/`, `services/`, `mcp_tools/`, `data/` (Startregeln). Alles andere
 bleibt draußen: `.env`, `.venv`, Datenbank, Tests, alte Pakete.
 
 ## Abhängigkeiten ändern

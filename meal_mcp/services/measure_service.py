@@ -63,9 +63,21 @@ def _parse_number(text: str) -> float | None:
         return None
 
 
+def bracket_mass(measure: str) -> float | None:
+    """Grams of a mass in brackets, the total of the line: "3 rashers (100g) chopped" -> 100."""
+    match = re.search(rf"\(\s*({AMOUNT})\s*([a-z]+)\s*\)", _clean_measure(measure))
+    if not match or match.group(2) not in MASS_UNITS:
+        return None
+    amount = _parse_number(match.group(1))
+    return None if amount is None else round(amount * UNIT_TO_GRAMS[match.group(2)], 4)
+
+
 def estimate_grams(measure: str) -> float | None:
     if not measure or not measure.strip():
         return None
+    bracket = bracket_mass(measure)
+    if bracket is not None:
+        return bracket
     match = re.search(rf"({AMOUNT})\s*([a-z]+)", _clean_measure(measure))
     if not match:
         return None
@@ -129,6 +141,8 @@ def parse_amount(measure: str) -> tuple[float, str] | None:
 
 
 def is_mass_measure(measure: str) -> bool:
+    if bracket_mass(measure or "") is not None:
+        return True
     parsed = parse_amount(measure)
     return bool(parsed and parsed[1] and parsed[1].split()[0] in MASS_UNITS)
 
@@ -189,11 +203,12 @@ def grams_from_portions(measure: str, portions: list[dict]) -> tuple[float, str]
         return None
 
     pieces = [portion for portion in portions if not set(_portion_words(portion)) & NON_PIECE_WORDS]
-    # "8 cloves" -> portion "clove"; "2 large" -> portion "large whole".
+    # "8 cloves" -> portion "clove"; "2 large" -> portion "large whole", not "extra large".
     for word in rest_words:
-        for portion in pieces:
-            if _singular(word) in {_singular(item) for item in _portion_words(portion)}:
-                return basis(portion)
+        named = [portion for portion in pieces if _singular(word) in {_singular(item) for item in _portion_words(portion)}]
+        named = [portion for portion in named if "extra" not in _portion_words(portion)] or named
+        if named:
+            return basis(min(named, key=lambda portion: len(_portion_words(portion))))
     if {_singular(word) for word in rest_words} & CONTAINER_WORDS:
         return None
     for size in ("medium", "whole"):
@@ -275,6 +290,13 @@ def scale_measure(measure: str, factor: float) -> str:
         return measure
     amount, rest = parsed
     value = amount * factor
+    # "2 (460g)" x 1.5 -> "3 (690 g)": the bracket is the total of the line.
+    rest = re.sub(
+        rf"\(\s*({AMOUNT})\s*([a-z]+)\s*\)",
+        lambda match: f"({format_amount(_parse_number(match.group(1)) * factor)} {match.group(2)})"
+        if match.group(2) in MASS_UNITS and _parse_number(match.group(1)) is not None else match.group(0),
+        rest,
+    )
     if rest.split()[:1] == ["kg"] and value < 1:
         return f"{format_amount(value * 1000)} g{rest[2:]}"
     return f"{format_amount(value)} {rest}".strip()

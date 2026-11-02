@@ -40,7 +40,7 @@ ALLOWED_MANIFEST_KEYS = {
 }
 RUNTIME_ROOTS = {
     "main.py", "manifest.json", "README.md", "icon.png", "LICENSE", "pyproject.toml", "uv.lock",
-    "config", "db", "repo", "services", "mcp_tools",
+    "config", "db", "repo", "services", "mcp_tools", "data",
 }
 FORBIDDEN_SUFFIXES = (".env", ".db", ".mcpb", ".pyc")
 
@@ -149,6 +149,8 @@ async def test_server_starts_from_bundle(unpacked, bundled_manifest, tmp_path):
             "suggest_substitutions", {"ingredients": ["halloumi"], "constraints": {"diet": "vegan"}}
         )
         assert result.data["status"] == "candidates_required"
+        rules = await client.call_tool("find_substitutions", {"ingredients": ["milk"]})
+        assert "oat milk" in [row["target_ingredient"] for row in rules.data["milk"]], "seed rules are loaded"
 
     assert (unpacked / ".venv").exists(), "uv must create its own environment"
     assert (tmp_path / "recipe_mcp.db").exists(), "database must be created in the data folder"

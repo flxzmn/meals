@@ -7,6 +7,7 @@ from repo.recipe_repo import RecipeRepo
 from repo.substitution_repo import SubstitutionRepo
 from services.constraint_service import constraint_violation, excluded_terms
 from services.measure_service import (
+    bracket_mass,
     format_amount,
     ingredient_grams,
     measure_kind,
@@ -195,9 +196,11 @@ def target_quantity(ingredient, substitution: dict, portions: list[dict] | None)
 
     if kind in ("mass", "volume"):
         grams, basis = ingredient_grams(ingredient.measure, ingredient.estimated_grams, portions)
+        # "2 (460g)" chicken legs become "368 g" tempeh, not "1.6 (368 g)".
+        bracket = bracket_mass(ingredient.measure)
         result.update({
             "status": "adjusted",
-            "target_measure": scale_measure(ingredient.measure, ratio),
+            "target_measure": f"{format_amount(bracket * ratio)} g" if bracket is not None else scale_measure(ingredient.measure, ratio),
             "target_grams": round(grams * ratio, 1) if grams is not None else None,
             "basis": basis,
             "estimated": kind == "volume" or ratio != 1.0,

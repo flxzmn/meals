@@ -57,6 +57,31 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     add_missing_columns(engine)
     refresh_estimated_grams(engine)
+    load_seed_substitutions(SessionLocal)
+
+
+SEED_FILE = Path(__file__).resolve().parent.parent / "data" / "substitutions_seed.json"
+
+
+def load_seed_substitutions(session_factory, seed_file: Path = SEED_FILE) -> int:
+    """Start an unused knowledge base with the seed rules (milk -> oat milk, ...).
+
+    Unused means no rules, suggestions or decisions yet, so a user who worked with the base is never
+    given rules again. Deleting every rule without ever deciding a suggestion does bring them back.
+    """
+    import json
+    from db.models import Substitution, SubstitutionFeedback, SubstitutionSuggestion
+    from repo.substitution_repo import SubstitutionRepo
+
+    if not seed_file.exists():
+        return 0
+    with session_factory() as session:
+        if any(session.query(model).first() for model in (Substitution, SubstitutionSuggestion, SubstitutionFeedback)):
+            return 0
+        created = SubstitutionRepo(session).add_bulk(json.loads(seed_file.read_text(encoding="utf-8")))["created"]
+        session.commit()
+    print(f"Loaded {len(created)} seed substitutions", file=sys.stderr)
+    return len(created)
 
 
 def adopt_legacy_database(legacy: Path, target: Path) -> bool:
