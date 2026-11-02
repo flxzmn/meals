@@ -415,7 +415,7 @@ def test_ingredients_in_measures_and_instructions_are_reported():
         ("prawns", "instructions", "tofu"),
     }
     assert result["hidden_note"]
-    assert result["adapted_recipes"][0]["hidden_ingredients"]
+    assert {row["recipe"] for row in result["hidden_ingredients"]} == {"9"}
 
 
 def test_no_hidden_ingredients_no_note():
@@ -423,7 +423,7 @@ def test_no_hidden_ingredients_no_note():
     seed_recipe(session)
     service = SubstitutionService(session)
     result = service.adapt_recipes(["test-1"])
-    assert result["hidden_ingredients"] == []
+    assert "hidden_ingredients" not in result
     assert "hidden_note" not in result
 
 
@@ -432,7 +432,7 @@ def test_constraint_excluded_substitute_is_not_suggested_as_hidden():
     saffron_recipe(session)
     service = SubstitutionService(session)
     service.add_substitutions([{"source_ingredient": "milk", "target_ingredient": "almond milk", "tags": ["vegan"]}])
-    assert service.adapt_recipes(["9"], {"dislikes": ["almond milk"]})["hidden_ingredients"] == []
+    assert "hidden_ingredients" not in service.adapt_recipes(["9"], {"dislikes": ["almond milk"]})
 
 
 # Servings use the same parser.

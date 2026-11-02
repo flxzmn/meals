@@ -1,4 +1,4 @@
-# Meal MCP v1.2.1
+# Meal MCP v1.2.2
 
 Local FastMCP server for Claude Desktop: recipe search and storage (TheMealDB), USDA nutrition
 estimates, and a substitution knowledge base that learns from the user's decisions.

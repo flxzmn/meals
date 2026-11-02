@@ -83,7 +83,7 @@ async def test_pieces_and_spoons_use_usda_portions():
     assert by_name["Tomato"]["grams"] == 246.0
     assert by_name["Tomato"]["grams_basis"] == "USDA portion: 1 medium whole = 123 g"
     assert by_name["Olive Oil"]["grams"] == 13.5
-    assert recipe["estimated_volume_conversions"] == []
+    assert "estimated_volume_conversions" not in recipe
     assert recipe["uncovered_ingredients"] == [
         {"position": 3, "ingredient": "Salt", "measure": "To taste", "reason": "amount_not_convertible"}
     ]

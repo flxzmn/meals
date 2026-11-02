@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "meal",
   "display_name": "Meal MCP",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Rezepte finden, Nährwerte berechnen und Gerichte an deine Ernährung anpassen, mit einer Ersatz-Wissensbasis, die aus deinen Entscheidungen lernt.",
   "long_description": "**Meal MCP** macht aus Claude einen Küchenassistenten mit Gedächtnis: Rezepte finden, Nährwerte berechnen und Gerichte an deine Ernährung anpassen.\n\n**Was du damit machen kannst**\n\n- **Rezepte** aus TheMealDB suchen und lokal speichern, mit Fotos als Dateien\n- **Nährwerte** mit USDA-Daten berechnen, auch ohne gespeichertes Rezept und mit deutschen Zutatennamen\n- **Zutaten ersetzen**: Claude schlägt vor, du entscheidest; freigegebene Regeln werden wiederverwendet, abgelehnte Vorschläge kommen nicht wieder\n- **Varianten** speichern, zum Beispiel vegan oder ohne Nüsse, mit angepassten Mengen und umgeschriebener Anleitung\n- **Vergleichen**: Original und Variante nebeneinander, Zutat für Zutat\n- **Korrigieren**: falsche USDA-Treffer sperren oder Werte vom Etikett eintragen\n- **Portionen**: Nährwerte pro Portion und Mengen für eine andere Personenzahl\n- **Sichern**: alles als Datei exportieren und wieder einlesen\n\n**So probierst du es aus**\n\n- „Suche Chicken Handi, speichere es und berechne die Nährwerte.“\n- „Mach das Rezept vegan und speichere die Variante.“\n- „Vergleiche die Nährwerte der Variante mit dem Original.“\n\n**Du brauchst** einen eigenen, kostenlosen USDA-API-Key (https://fdc.nal.usda.gov/api-key-signup). Claude Desktop fragt bei der Installation danach.\n\n**Gut zu wissen:** Rezepte, Regeln und Varianten liegen in einer lokalen Datenbank auf deinem Rechner. Sie liegt außerhalb der Erweiterung und übersteht eine Neuinstallation. Suchanfragen gehen an TheMealDB und USDA, Tool-Ergebnisse wie jeder Chatinhalt an Claude. Nährwerte sind Schätzungen. Tags wie „nussfrei“ ersetzen nicht den Blick aufs Etikett, und bei Allergien ist das keine verlässliche Grundlage.",
   "author": {
@@ -45,23 +45,23 @@
   "tools": [
     {
       "name": "adapt_recipes",
-      "description": "Adapt several saved recipes using the substitution knowledge base.\n\nSubstitute amounts follow the quantity_ratio of each substitution: mass and volume are scaled,\npiece counts are converted to grams with USDA portion weights (run enrich_recipes first).\nAmounts that cannot be converted are listed in unverified_quantities.\nhidden_ingredients lists known ingredients that stand only in a measure text or the instructions and\nwere not replaced: tell the user. Above 5 recipes the result is compact (no instructions, short\ningredient rows); save_adapted_recipes accepts it. compact=false forces full detail.\nThe result is not stored. To keep a variant, pass items of adapted_recipes to save_adapted_recipes."
+      "description": "Adapt saved recipes with the substitution rules. Nothing is stored: pass items of adapted_recipes\nto save_adapted_recipes to keep them.\n\nSubstitute amounts follow quantity_ratio; pieces become grams via USDA portions (enrich_recipes\nfirst), the rest is listed in unverified_quantities. Tell the user about hidden_ingredients (only in\na measure text or the instructions, not replaced). Above 5 recipes compact; compact=false forces detail."
     },
     {
       "name": "add_substitutions",
-      "description": "Add several ingredient substitutions to the local knowledge base, or change their quantity rule.\n\nOptional per item: quantity_ratio (grams of target per gram of source, default 1.0) and\nquantity_note (e.g. \"1 egg = 1 tbsp ground flaxseed + 3 tbsp water\"). For an existing pair they\nreplace the stored rule (listed in updated); adapt_recipes uses the ratio for substitute amounts."
+      "description": "Add ingredient substitutions to the knowledge base, or change the quantity rule of an existing pair\n(listed in updated). Optional: quantity_ratio (grams of target per gram of source, default 1.0) and\nquantity_note (e.g. \"1 egg = 1 tbsp ground flaxseed + 3 tbsp water\")."
     },
     {
       "name": "approve_substitutions",
-      "description": "Approve pending suggestions and activate them in the knowledge base.\n\nEach item: {\"id\": <suggestion id>} or source_ingredient/target_ingredient, plus an optional\n\"feedback\" with the user's own words. Calling it again for an already approved suggestion with\n\"feedback\" adds the comment later."
+      "description": "Approve pending suggestions as rules: [{id} or {source_ingredient, target_ingredient}], optional\n\"feedback\" in the user's words (also later, for an approved one)."
     },
     {
       "name": "calculate_nutrition",
-      "description": "Calculate nutrition of free ingredients without a saved recipe: [{name, measure}], e.g.\n[{\"name\": \"Hähnchen\", \"measure\": \"500 g\"}, {\"name\": \"Zwiebeln\", \"measure\": \"2\"}].\n\nUses the same USDA matching, portion weights and manual rules as recipes. Common German names\nare translated; English names match more reliably. Check usda_match in ingredient_breakdown and\nfix wrong matches with set_ingredient_matches. With servings the result also contains per_serving."
+      "description": "Nutrition of free ingredients without a saved recipe: [{name, measure}], e.g.\n[{\"name\": \"Hähnchen\", \"measure\": \"500 g\"}]. Same matching as recipes; English names match more\nreliably. Check usda_match and fix it with set_ingredient_matches."
     },
     {
       "name": "compare_nutrition",
-      "description": "Compare the nutrition of recipe variants with their originals.\n\nPass variant IDs, or an original ID to compare all its variants. Returns calories, protein,\nfat and carbs of both, the absolute and percent difference, the coverage (how many ingredients\nare counted) and the effect of each ingredient change. enrich=true loads missing USDA data first.\nIf a replaced ingredient has no data, comparable is false and difference is null: do not present\npartial_difference as a result; notes names the cause. Above 5 comparisons the result is compact\n(only uncounted change_effects, no uncovered_ingredients); compact=false forces full detail."
+      "description": "Compare variants with their originals (variant IDs, or an original ID for all its variants):\nnutrients, difference, coverage and the effect of each change.\n\nIf comparable is false, difference is null: do not present partial_difference as a result; notes\nnames the cause. Above 5 comparisons compact; compact=false forces detail."
     },
     {
       "name": "delete_recipes",
@@ -69,71 +69,67 @@
     },
     {
       "name": "delete_substitutions",
-      "description": "Delete several substitutions identified by source and target ingredient."
+      "description": "Delete substitutions: [{source_ingredient, target_ingredient}]."
     },
     {
       "name": "download_recipe_images",
-      "description": "Save the photos of several saved recipes or variants as JPEG files, e.g. for a recipe book.\n\nsize: small (150 px, about 10 KB), medium (350 px, about 35 KB), large (500 px) or original\n(about 700 px). Without folder the files go\nto the images folder in the data folder; the result lists one path per recipe. Variants get the\nphoto of their original. Files already there are not downloaded again."
+      "description": "Save recipe photos as JPEG files, e.g. for a recipe book. size: small (150 px), medium (350 px),\nlarge (500 px) or original (about 700 px). Default folder: images in the data folder. Variants get\ntheir original's photo."
     },
     {
       "name": "enrich_recipes",
-      "description": "Enrich several saved recipes with cached USDA nutrition data in one tool call.\n\nSet refresh=true to look up all ingredients again and replace cached USDA matches; use it with a few\nrecipes at a time. Long runs stop in time and save their progress: if complete is false, call again\nwith the same IDs."
+      "description": "Load USDA nutrition data for saved recipes. If complete is false, call again with the same IDs.\nrefresh=true looks up all ingredients again (use with a few recipes)."
     },
     {
       "name": "export_data",
-      "description": "Save all recipes, variants, substitutions, decisions, USDA matches and label values to a JSON file.\n\nWithout path the file goes to the exports folder in the data folder; the result names the location.\nAn existing file is not overwritten. The file holds no API key."
+      "description": "Save all data (recipes, variants, rules, decisions, matches) to a JSON file; default folder:\nexports in the data folder. Existing files are not overwritten."
     },
     {
       "name": "find_substitutions",
-      "description": "Find suitable substitutions for several ingredients in one call."
+      "description": "Substitution rules per source ingredient, optionally filtered by constraints. Without ingredients,\nall rules in the knowledge base."
     },
     {
       "name": "get_nutrition",
-      "description": "Return estimated nutrition summaries for several saved recipes.\n\nCall enrich_recipes first: ingredients without USDA data are not counted.\ningredient_breakdown lists the USDA food used for each ingredient and how its grams were derived\n(grams_basis: measured, USDA portion weight for pieces and spoons, or approx. 1 g/ml for volumes).\nper_serving is null until the servings are known (set_recipe_servings).\nAbove 5 recipes the result is compact (totals, coverage, uncovered ingredients); compact=false forces\nfull detail, compact=true forces the short form."
+      "description": "Estimated nutrition of saved recipes (enrich_recipes first; ingredients without data are not counted).\n\ningredient_breakdown gives the USDA food and grams_basis per ingredient; per_serving appears once\nservings are known. Above 5 recipes compact (totals, coverage, uncovered); compact=false forces detail."
     },
     {
       "name": "get_recipes",
-      "description": "Return several saved recipes or variants in full: ingredients, instructions and, for variants,\nthe original recipe, constraints and changes."
+      "description": "Return saved recipes or variants with ingredients, instructions and, for variants, constraints and\nchanges. Above 5 recipes compact (no instructions, image or changes); compact=false forces detail."
     },
     {
       "name": "import_data",
-      "description": "Load a file written by export_data into the database.\n\nAdds what is missing and keeps everything that already exists, so nothing is overwritten and\nimporting twice changes nothing. If the file is damaged, nothing is imported."
+      "description": "Load a file from export_data. Only adds what is missing; a damaged file imports nothing."
     },
     {
       "name": "list_ingredient_matches",
-      "description": "List USDA matches of ingredients with their source (auto or manual), rejected foods and notes.\n\nWithout ingredients, lists all cached matches and rules."
+      "description": "USDA matches of ingredients with source (auto or manual), rejected foods and notes; without\ningredients all of them."
     },
     {
       "name": "list_recipes",
-      "description": "List all locally saved recipes and variants (is_variant, parent_mealdb_id, variant_ids;\nvariants also constraints and change_count). Use get_recipes for details."
+      "description": "List all saved recipes and variants. Variants have parent_mealdb_id, constraints and change_count;\noriginals list their variant_ids. Empty fields are left out."
     },
     {
       "name": "list_substitution_suggestions",
-      "description": "List recorded suggestions and the feedback on them, optionally filtered by status: pending,\napproved or rejected. Each suggestion has decisions (accepted, the user's feedback, date);\nsummary counts all approvals and rejections."
-    },
-    {
-      "name": "list_substitutions",
-      "description": "List all substitutions in the local knowledge base."
+      "description": "List suggestions with their decisions and feedback; status: pending, approved or rejected."
     },
     {
       "name": "record_substitution_suggestions",
-      "description": "Validate and store candidate substitutions as pending suggestions.\n\nEach suggestion needs source_ingredient, target_ingredient, reason, confidence and tags.\nCandidates violating the constraints or previously rejected under the same constraints are\nreturned in excluded_candidates. Pending suggestions are decided with approve_substitutions\nor reject_substitutions."
+      "description": "Store candidates as pending suggestions: source_ingredient, target_ingredient, reason,\nconfidence, tags. Candidates that break the constraints or were rejected before are returned in\nexcluded_candidates."
     },
     {
       "name": "reject_ingredient_matches",
-      "description": "Reject wrong USDA matches: [{ingredient, fdc_id (default: current match), note}].\n\nThe rejected food is never chosen again for that ingredient; the next best match is loaded\nand returned in new_matches."
+      "description": "Reject wrong USDA matches: [{ingredient, fdc_id (default: current), note}]. The next best match\nis loaded (new_matches)."
     },
     {
       "name": "reject_substitutions",
-      "description": "Reject pending suggestions and record the decision.\n\nEach item: {\"id\": <suggestion id>} or source_ingredient/target_ingredient, plus \"feedback\"\nwith the user's reason for the rejection (e.g. \"mag ich nicht\"). Calling it again for an\nalready rejected suggestion with \"feedback\" adds the reason later."
+      "description": "Reject pending suggestions: [{id} or {source_ingredient, target_ingredient}] with \"feedback\",\nthe user's reason (also later, for a rejected one)."
     },
     {
       "name": "rewrite_instructions",
-      "description": "Prepare rewriting the instructions of several saved recipe variants.\n\nReturns one request per variant with the current instructions, the ingredient changes, the\nreplaced terms and guidelines. Write the new instructions yourself following the guidelines,\nthen call save_rewritten_instructions. Variants already rewritten are skipped unless force=true."
+      "description": "Prepare rewriting variant instructions: one request per variant with instructions, changes and\nguidelines. Write the text yourself, then call save_rewritten_instructions. force=true redoes\nrewritten ones."
     },
     {
       "name": "save_adapted_recipes",
-      "description": "Save several adapted recipes as variants with their own IDs. The originals stay unchanged.\n\nPass the items of adapted_recipes from adapt_recipes, optionally edited. Each item needs\nsource_mealdb_id and ingredients ([{position, name, measure}]); name, instructions, constraints\nand changes are optional. The server computes the differences to the original. Saving the same\nvariant twice returns the existing one. Variant IDs look like \"52795-v1\" and work with\nget_recipes, enrich_recipes, get_nutrition and delete_recipes."
+      "description": "Save adapted recipes as variants (\"52795-v1\"); originals stay unchanged. Pass items of\nadapted_recipes, optionally edited: source_mealdb_id and ingredients [{position, name, measure}]\nare required. Saving the same variant twice returns the existing one."
     },
     {
       "name": "save_recipes",
@@ -141,11 +137,11 @@
     },
     {
       "name": "save_rewritten_instructions",
-      "description": "Store rewritten instructions for several variants: [{mealdb_id, instructions}].\n\nThe text is marked as LLM-generated (instructions_source='llm'). Warnings list replaced\ningredients that are still mentioned. Original recipes cannot be changed."
+      "description": "Store rewritten variant instructions: [{mealdb_id, instructions}], marked as LLM text. warnings\nlist replaced ingredients still mentioned."
     },
     {
       "name": "scale_recipes",
-      "description": "Show ingredient amounts for another number of servings: [{mealdb_id, servings}].\n\nNeeds known servings (set_recipe_servings). Nothing is saved; save_adapted_recipes stores a\nscaled recipe as a variant if the user wants to keep it."
+      "description": "Show amounts for another number of servings: [{mealdb_id, servings}]. Needs known servings;\nnothing is saved (save_adapted_recipes keeps it as a variant)."
     },
     {
       "name": "search_recipes",
@@ -153,23 +149,23 @@
     },
     {
       "name": "search_usda_foods",
-      "description": "Search USDA FoodData Central for several terms and list candidates with fdc_id, description,\nkcal, protein, fat and carbs per 100 g. Use it to choose a match by hand with set_ingredient_matches."
+      "description": "Search USDA foods for several terms: fdc_id, description and nutrients per 100 g, to pick a\nmatch for set_ingredient_matches."
     },
     {
       "name": "set_ingredient_matches",
-      "description": "Pin nutrition data to several ingredients and keep it, also with enrich_recipes refresh=true.\n\nEither a USDA food: {ingredient, fdc_id, note}. Or, for foods USDA does not have, values per\n100 g from a label: {ingredient, calories_per_100g, protein_per_100g, fat_per_100g,\ncarbs_per_100g, note}. Stored values count in get_nutrition and compare_nutrition."
+      "description": "Pin nutrition data to ingredients, kept on refresh: {ingredient, fdc_id, note}, or label values\n{ingredient, calories_per_100g, protein_per_100g, fat_per_100g, carbs_per_100g, note}."
     },
     {
       "name": "set_recipe_servings",
-      "description": "Store how many servings recipes make: [{mealdb_id, servings}]. Variants inherit the value of\ntheir original unless they have their own.\n\nTheMealDB has no servings: use what the user says or what the instructions state, do not guess.\nget_nutrition and compare_nutrition then also return per_serving."
+      "description": "Store how many servings recipes make: [{mealdb_id, servings}]; variants inherit it. Use what\nthe user or the instructions say, do not guess."
     },
     {
       "name": "suggest_substitutions",
-      "description": "Start the suggestion workflow for several ingredients.\n\nReturns active substitutions, still pending suggestions and, for ingredients without either,\na structured suggestion_request (constraints, required tags, targets to avoid). Generate\ncandidates for that request and store them with record_substitution_suggestions.\nConstraints example: {\"diet\": \"vegan\", \"required_tags\": [\"nut free\"], \"excluded_ingredients\": [\"tofu\"]}."
+      "description": "Start the suggestion workflow: returns active rules, pending suggestions and, where neither\nexists, a suggestion_request. Generate candidates for it and store them with\nrecord_substitution_suggestions. Constraints e.g. {\"diet\": \"vegan\", \"excluded_ingredients\": [\"tofu\"]}."
     },
     {
       "name": "update_recipe_variants",
-      "description": "Edit several saved variants. Original recipes cannot be edited.\n\nEach item needs mealdb_id and may set name, instructions, constraints and ingredients\n(the complete new list [{position, name, measure}]). Changes to the original are recomputed."
+      "description": "Edit saved variants (not originals): mealdb_id plus name, instructions, constraints or the\ncomplete new ingredients list [{position, name, measure}]."
     }
   ],
   "tools_generated": false,

@@ -21,7 +21,6 @@ def test_adapted_recipe_is_saved_as_variant_and_original_is_unchanged():
     variant = result["saved"][0]
     assert variant["mealdb_id"] == "test-1-v1"
     assert variant["parent_mealdb_id"] == "test-1"
-    assert variant["is_variant"] is True
 
     original = session.query(Recipe).filter_by(mealdb_id="test-1").one()
     assert [row.normalized_name for row in original.ingredients] == ["chicken", "milk"]

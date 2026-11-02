@@ -21,6 +21,7 @@
 | v1.1.0 | – | Datenordner außerhalb der Erweiterung, Export und Import, Portionen, Evals. Mengen-Parser (Brüche, Behälter, `2 x 400g`), Treffer, fehlende Energiewerte, kompakte Ausgabe, Zeitlimit beim Anreichern, versteckte Zutaten | `set_recipe_servings`, `scale_recipes`, `export_data`, `import_data` | automatisch und live gegen USDA getestet |
 | v1.2.0 | – | Rezeptfotos als Dateien (Idee aus dem Rezeptbuch-Lauf). Verschlankt: nur noch das uv-Paket; `list_recipe_variants`, `set_substitution_quantities` und `list_substitution_feedback` in `list_recipes`, `add_substitutions` und `list_substitution_suggestions` aufgegangen; kürzeres README und kürzerer Release-Test | `download_recipe_images` | automatisch und live gegen TheMealDB getestet |
 | v1.2.1 | – | Befunde aus dem Release-Test von 1.2.0: Gewicht in Klammern zählt als gemessen, „3 Large“ nimmt „large“ statt „extra large“, Süßkartoffel roh statt kandiert. Die 30 Startregeln aus `data/substitutions_seed.json` werden in eine unbenutzte Wissensbasis geladen (lagen seit v1.0 ungenutzt im Repo) | – | automatisch und live gegen USDA getestet |
+| v1.2.2 | – | Weniger Tokens: `get_recipes` kompakt ab 6 Rezepten, leere Felder und `is_variant` fallen weg, `covered_ingredients` entfällt, `calculation_note` einmal pro Ergebnis, `adapt_recipes` ohne wiederholte Regel pro Zutat, kürzere Portionstexte und Tool-Beschreibungen. `list_substitutions` in `find_substitutions` aufgegangen (ohne Zutaten: alle Regeln) | – | automatisch getestet |
 
 „Automatisch getestet“: Unit-Tests, MCP-Abnahmetest und Release-Test grün. Die Stände v0.6 bis v0.11
 wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROTOKOLL.md](TESTPROTOKOLL.md)).
@@ -39,6 +40,7 @@ wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROT
 | v1.0 → v1.1 | Ein Lauf über 51 echte Rezepte fand mehr Rechenfehler als alle Abnahmen zuvor. Siehe [FEHLERANALYSE.md](FEHLERANALYSE.md), Fall 14. |
 | v1.1 | Evals schließen die Lücke zwischen grünen Tests und dem Verhalten im Chat: Geprüft wird, was das LLM mit den Tools tut. |
 | v1.1 → v1.2 | Weglassen ist Arbeit: Drei Tools waren Teilmengen anderer, ein Paket wurde nicht mehr getestet. Jedes Tool kostet Kontext und eine Wahl für das LLM, jedes Paket einen Testpfad. |
+| v1.2 → v1.2.2 | Tokens messen statt schätzen: Die Tool-Beschreibungen kosten in jedem Chat Tokens, einzelne Ergebnisse noch mehr. Leere Felder und Wiederholungen weglassen spart, ohne Information zu verlieren. |
 
 ## Testumfang
 
@@ -52,3 +54,4 @@ wurden gemeinsam mit v0.12.0 und v0.12.1 in Claude Desktop abgenommen ([TESTPROT
 | v1.1.0 | 279 | 12 |
 | v1.2.0 | 285 | 10 |
 | v1.2.1 | 295 | 10 |
+| v1.2.2 | 303 | 10 |

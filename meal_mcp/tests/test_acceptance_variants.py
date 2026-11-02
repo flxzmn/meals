@@ -89,7 +89,7 @@ async def test_02_original_recipe_stays_unchanged(client):
     original = (await call(client, "get_recipes", mealdb_ids=["100"]))["recipes"][0]
     assert [row["name"] for row in original["ingredients"]] == ["Chicken", "Milk"]
     assert original["instructions"] == "Fry the chicken for 20 minutes."
-    assert original["is_variant"] is False
+    assert "parent_mealdb_id" not in original
     assert original["variant_ids"] == ["100-v1"]
 
 
@@ -138,7 +138,7 @@ async def test_07_same_variant_is_not_saved_twice(client):
     await adapt_and_save(client)
     again = await adapt_and_save(client)
     assert again["status"] == "existing"
-    assert sum(row["is_variant"] for row in await call(client, "list_recipes")) == 1
+    assert sum("parent_mealdb_id" in row for row in await call(client, "list_recipes")) == 1
 
 
 async def test_08_bulk_save_of_several_recipes(client):
@@ -166,7 +166,7 @@ async def test_10_delete_variant_and_original(client):
     await adapt_and_save(client)
     deleted = await call(client, "delete_recipes", mealdb_ids=["100-v1"])
     assert deleted["deleted"] == ["100-v1"]
-    assert (await call(client, "get_recipes", mealdb_ids=["100"]))["recipes"][0]["variant_ids"] == []
+    assert "variant_ids" not in (await call(client, "get_recipes", mealdb_ids=["100"]))["recipes"][0]
 
     await adapt_and_save(client)
     deleted = await call(client, "delete_recipes", mealdb_ids=["100"])
@@ -252,7 +252,7 @@ async def test_s8_03_learned_suggestion_keeps_its_quantity_rule(client):
     suggestion = recorded["suggestions"][0]
     assert suggestion["quantity_ratio"] == 1.1
     await call(client, "approve_substitutions", suggestions=[{"id": suggestion["id"]}], constraints={"diet": "vegan"})
-    rules = {row["target_ingredient"]: row for row in await call(client, "list_substitutions")}
+    rules = {row["target_ingredient"]: row for row in (await call(client, "find_substitutions"))["carrot"]}
     assert rules["parsnip"]["quantity_ratio"] == 1.1
 
 

@@ -184,7 +184,7 @@ def grams_from_portions(measure: str, portions: list[dict]) -> tuple[float, str]
         return None
 
     def basis(portion: dict) -> tuple[float, str]:
-        return round(amount * portion["grams"], 1), f"USDA portion: 1 {portion['unit']} = {portion['grams']:g} g"
+        return round(amount * portion["grams"], 1), f"USDA portion: 1 {short_unit(portion)} = {portion['grams']:g} g"
 
     if unit in VOLUME_UNITS:
         # A recipe's "cup" of cream is liquid, not "cup, whipped" at half the weight.
@@ -199,7 +199,7 @@ def grams_from_portions(measure: str, portions: list[dict]) -> tuple[float, str]
                 known = [word for word in words if word in SPOONS_IN_TSP]
                 if known and not set(words) & CUT_WORDS:
                     grams = portion["grams"] * SPOONS_IN_TSP[unit] / SPOONS_IN_TSP[known[0]]
-                    return round(amount * grams, 1), f"USDA portion: 1 {portion['unit']} = {portion['grams']:g} g, scaled to {unit}"
+                    return round(amount * grams, 1), f"USDA portion: 1 {short_unit(portion)} = {portion['grams']:g} g, scaled to {unit}"
         return None
 
     pieces = [portion for portion in portions if not set(_portion_words(portion)) & NON_PIECE_WORDS]
@@ -218,6 +218,11 @@ def grams_from_portions(measure: str, portions: list[dict]) -> tuple[float, str]
     # "2" yellow peppers are two peppers, not two strips.
     whole = [portion for portion in pieces if not {_singular(word) for word in _portion_words(portion)} & PART_WORDS]
     return basis((whole or pieces)[0]) if pieces else None
+
+
+def short_unit(portion: dict) -> str:
+    """Portion unit without its note in brackets: "medium (2-1/2" dia)" -> "medium"."""
+    return re.sub(r"\s*\([^)]*\)", "", portion["unit"]).strip() or portion["unit"]
 
 
 def _portion_words(portion: dict) -> list[str]:

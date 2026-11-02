@@ -5,6 +5,7 @@ from config.settings import settings
 from repo.match_rule_repo import CUSTOM_FDC_ID, MatchRuleRepo
 from repo.nutrition_repo import NutritionRepo
 from repo.recipe_repo import RecipeRepo
+from services.output import without_empty
 from services.measure_service import DENSITY_BASIS, VOLUME_BASIS, estimate_grams, ingredient_grams, normalize_ingredient_name
 from services.serving_service import clean_servings
 from services.usda_service import USDAConfigurationError, USDAService
@@ -16,6 +17,10 @@ ENRICH_BATCH_SIZE = 16
 COMPACT_ABOVE = 5
 # Ingredients without a USDA match wait at the end of the next run, so they cannot block the others.
 RETRY_MISSES_AFTER_SECONDS = 600
+CALCULATION_NOTE = (
+    "Values are estimates. USDA values are scaled from per-100g data. Pieces and spoons use "
+    "USDA average portion weights (see grams_basis); other volumes assume approximately 1 g/ml, dry foods a typical density."
+)
 recent_misses: dict[str, float] = {}
 
 
@@ -99,7 +104,7 @@ class NutritionService:
         recipe = SimpleNamespace(mealdb_id=None, name="Ingredients", ingredients=rows, effective_servings=clean_servings(servings))
         summary = self._summarize(recipe, self._cached_for([recipe]))
         del summary["mealdb_id"], summary["recipe_name"]
-        return {**summary, "invalid": invalid, "errors": lookup["errors"]}
+        return {**without_empty(summary), "calculation_note": CALCULATION_NOTE, "invalid": invalid, "errors": lookup["errors"]}
 
     async def _load(self, unique: dict[str, str], refresh: bool = False) -> tuple[dict, dict]:
         """Look up ingredients that are not usable from the cache. Returns (kept cache rows, lookup result)."""
@@ -176,15 +181,16 @@ class NutritionService:
         cached = self._cached_for(recipes)
         found = {recipe.mealdb_id for recipe in recipes}
         summaries = [self._summarize(recipe, cached) for recipe in recipes]
-        if is_compact(compact, len(recipes)):
+        compact = is_compact(compact, len(recipes))
+        if compact:
             for summary in summaries:
-                for key in ("covered_ingredients", "ingredient_breakdown", "estimated_volume_conversions", "calculation_note"):
-                    del summary[key]
-        return {
-            "compact": is_compact(compact, len(recipes)),
-            "recipes": summaries,
+                del summary["ingredient_breakdown"], summary["estimated_volume_conversions"]
+        return without_empty({
+            "compact": compact,
+            "recipes": [without_empty(summary) for summary in summaries],
             "missing_recipes": sorted(set(mealdb_ids) - found),
-        }
+            "calculation_note": None if compact else CALCULATION_NOTE,
+        })
 
     async def compare_variants(self, mealdb_ids: list[str], enrich: bool = True, compact: bool | None = None) -> dict:
         """Compare each variant with its original (Sprint 9). An original ID compares all its variants."""
@@ -276,8 +282,8 @@ class NutritionService:
         uncounted = [effect["target"] or effect["source"] for effect in uncounted]
         summary_keys = ("mealdb_id", "recipe_name", *NUTRIENTS, "servings", "per_serving")
         return {
-            "original": {key: before[key] for key in summary_keys},
-            "variant": {key: after[key] for key in summary_keys},
+            "original": without_empty({key: before[key] for key in summary_keys}),
+            "variant": without_empty({key: after[key] for key in summary_keys}),
             "comparable": not uncounted,
             "difference": None if uncounted else difference,
             "partial_difference": difference if uncounted else None,
@@ -305,7 +311,7 @@ class NutritionService:
 
     def _summarize(self, recipe, cached) -> dict:
         totals = {key: 0.0 for key in NUTRIENTS}
-        covered, uncovered, estimated, breakdown = [], [], [], []
+        covered, uncovered, estimated, breakdown = 0, [], [], []
         for ingredient in recipe.ingredients:
             nutrition = cached.get(ingredient.normalized_name)
             grams, basis = self._grams(ingredient, nutrition)
@@ -318,7 +324,7 @@ class NutritionService:
             totals["protein"] += (nutrition.protein_per_100g or 0.0) * factor
             totals["fat"] += (nutrition.fat_per_100g or 0.0) * factor
             totals["carbs"] += (nutrition.carbs_per_100g or 0.0) * factor
-            covered.append(ingredient.name)
+            covered += 1
             breakdown.append({
                 "position": ingredient.position,
                 "ingredient": ingredient.name,
@@ -342,16 +348,11 @@ class NutritionService:
             "servings": servings,
             "per_serving": {key: round(value / servings, 1) for key, value in totals.items()} if servings else None,
             "coverage": {
-                "covered": len(covered),
+                "covered": covered,
                 "total": total,
-                "percent": round(len(covered) / total * 100, 1) if total else 0.0,
+                "percent": round(covered / total * 100, 1) if total else 0.0,
             },
-            "covered_ingredients": covered,
             "ingredient_breakdown": breakdown,
             "uncovered_ingredients": uncovered,
             "estimated_volume_conversions": estimated,
-            "calculation_note": (
-                "Values are estimates. USDA values are scaled from per-100g data. Pieces and spoons use "
-                "USDA average portion weights (see grams_basis); other volumes assume approximately 1 g/ml, dry foods a typical density."
-            ),
         }

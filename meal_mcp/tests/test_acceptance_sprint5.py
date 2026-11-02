@@ -113,8 +113,8 @@ async def test_04_approval_is_persisted(client):
         suggestions=[{"id": suggestions["vegan grilling cheese"]["id"]}], constraints=CONSTRAINTS,
     )
     assert approved["status"] == "approved"
-    active = await call(client, "list_substitutions")
-    assert [row["target_ingredient"] for row in active] == ["vegan grilling cheese"]
+    active = await call(client, "find_substitutions")
+    assert [row["target_ingredient"] for row in active["halloumi"]] == ["vegan grilling cheese"]
 
 
 async def test_05_rejection_is_persisted(client):
@@ -127,7 +127,7 @@ async def test_05_rejection_is_persisted(client):
     rejected = (await call(client, "list_substitution_suggestions", status="rejected"))["suggestions"]
     assert rejected[0]["target_ingredient"] == "king oyster mushroom"
     assert rejected[0]["decisions"][0]["feedback"] == "too chewy"
-    assert await call(client, "list_substitutions") == []
+    assert await call(client, "find_substitutions") == {}
 
 
 async def test_06_constraints_are_kept_in_feedback(client):

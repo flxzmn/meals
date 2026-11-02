@@ -54,7 +54,7 @@ Save the 51 recipes of the first run (v1.0.0), ask for their nutrition, then for
 each. Fixed IDs make two runs comparable. Run it after a fresh install on an empty data folder: move
 `recipe_mcp.db` out of the data folder first ([INSTALLATION.md](INSTALLATION.md)). On the first start the
 knowledge base gets the 30 seed rules from `data/substitutions_seed.json`, including milk → oat milk;
-check with "Welche Ersatzregeln kennst du?" (`list_substitutions`) before the vegan part.
+check with "Welche Ersatzregeln kennst du?" (`find_substitutions` without ingredients) before the vegan part.
 
 ```
 52795, 53053, 52843, 52827, 52820, 53034, 52773, 53151, 52963, 53219, 52945, 53065, 53191, 53238,

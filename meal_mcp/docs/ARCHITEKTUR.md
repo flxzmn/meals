@@ -10,7 +10,7 @@ lernende Wissensbasis für Zutatenersatz. Stand: v1.2.0.
 Claude Desktop (LLM, Chat, Nutzerentscheidungen)
     │  MCP über STDIO
     ▼
-mcp_tools/      32 Tools. Nur Ein- und Ausgabe, keine Fachlogik.
+mcp_tools/      31 Tools. Nur Ein- und Ausgabe, keine Fachlogik.
     ▼
 services/       Fachlogik: Bulk-Verarbeitung, Filter, Umrechnung, Vergleich.
     ▼
@@ -34,6 +34,7 @@ direkt mit MCP und ein Repository nie mit einer externen API.
 | **Bulk-Tools mit Listen.** Fast jedes Tool nimmt mehrere Rezepte, Zutaten oder Regeln. | Weniger Tool-Aufrufe pro Chat, kürzere Antwortzeiten. |
 | **Varianten sind Rezepte mit `parent_id`.** | `enrich_recipes`, `get_nutrition`, `delete_recipes` und der Vergleich funktionieren ohne Sonderfälle. |
 | **Schätzungen bleiben sichtbar.** `grams_basis`, `estimated`, `coverage`, `uncovered_ingredients`. | Nährwerte aus Rezepttexten sind nie exakt; der Nutzer soll sehen, woher eine Zahl kommt. |
+| **Ergebnisse sparen Kontext.** Leere Felder fallen weg, ab 6 Rezepten antworten `get_recipes`, `get_nutrition`, `adapt_recipes` und `compare_nutrition` kompakt (`compact=false` erzwingt Details), Hinweise stehen einmal pro Ergebnis statt pro Rezept. | Jedes Tool-Ergebnis bleibt im Chat und wird mit jeder Nachricht erneut gelesen. Auch die Tool-Beschreibungen kosten in jedem Chat Tokens, deshalb sind sie kurz. |
 | **Allowlist-Build.** Das Paket enthält nur Laufzeitdateien. | Keine `.env`, keine Datenbank, kein `.venv` im Paket (früher über 100 MB, jetzt ca. 170 KB). |
 
 ## Datenmodell
@@ -136,7 +137,7 @@ Entscheidungen stehen in `ingredient_match_rules` und überstehen `enrich_recipe
 | Rezepte | `search_recipes`, `save_recipes`, `list_recipes`, `get_recipes`, `delete_recipes`, `download_recipe_images` |
 | Nährwerte | `enrich_recipes`, `get_nutrition`, `calculate_nutrition`, `compare_nutrition` |
 | USDA-Treffer | `search_usda_foods`, `list_ingredient_matches`, `set_ingredient_matches`, `reject_ingredient_matches` |
-| Ersatzregeln | `add_substitutions`, `find_substitutions`, `list_substitutions`, `delete_substitutions`, `adapt_recipes` |
+| Ersatzregeln | `add_substitutions`, `find_substitutions`, `delete_substitutions`, `adapt_recipes` |
 | Lernen | `suggest_substitutions`, `record_substitution_suggestions`, `approve_substitutions`, `reject_substitutions`, `list_substitution_suggestions` |
 | Varianten | `save_adapted_recipes`, `update_recipe_variants`, `rewrite_instructions`, `save_rewritten_instructions` |
 | Portionen | `set_recipe_servings`, `scale_recipes` |

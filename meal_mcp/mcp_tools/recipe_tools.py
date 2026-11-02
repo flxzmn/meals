@@ -20,29 +20,25 @@ async def save_recipes(mealdb_ids: list[str]) -> dict:
 
 @mcp.tool()
 def list_recipes() -> list[dict]:
-    """List all locally saved recipes and variants (is_variant, parent_mealdb_id, variant_ids;
-    variants also constraints and change_count). Use get_recipes for details."""
+    """List all saved recipes and variants. Variants have parent_mealdb_id, constraints and change_count;
+    originals list their variant_ids. Empty fields are left out."""
     with session_scope() as session:
         return RecipeService(session).list_recipes()
 
 
 @mcp.tool()
-def get_recipes(mealdb_ids: list[str]) -> dict:
-    """Return several saved recipes or variants in full: ingredients, instructions and, for variants,
-    the original recipe, constraints and changes."""
+def get_recipes(mealdb_ids: list[str], compact: bool | None = None) -> dict:
+    """Return saved recipes or variants with ingredients, instructions and, for variants, constraints and
+    changes. Above 5 recipes compact (no instructions, image or changes); compact=false forces detail."""
     with session_scope() as session:
-        return RecipeService(session).get_recipes(mealdb_ids)
+        return RecipeService(session).get_recipes(mealdb_ids, compact)
 
 
 @mcp.tool()
 async def download_recipe_images(mealdb_ids: list[str], size: str = "medium", folder: str | None = None) -> dict:
-    """Save the photos of several saved recipes or variants as JPEG files, e.g. for a recipe book.
-
-    size: small (150 px, about 10 KB), medium (350 px, about 35 KB), large (500 px) or original
-    (about 700 px). Without folder the files go
-    to the images folder in the data folder; the result lists one path per recipe. Variants get the
-    photo of their original. Files already there are not downloaded again.
-    """
+    """Save recipe photos as JPEG files, e.g. for a recipe book. size: small (150 px), medium (350 px),
+    large (500 px) or original (about 700 px). Default folder: images in the data folder. Variants get
+    their original's photo."""
     with session_scope() as session:
         return await ImageService(session).download(mealdb_ids, size, folder)
 

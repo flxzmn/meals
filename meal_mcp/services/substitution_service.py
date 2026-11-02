@@ -15,6 +15,7 @@ from services.measure_service import (
     scale_measure,
 )
 from services.instruction_service import mentioned_terms
+from services.output import without_empty
 
 COMPACT_ABOVE = 5
 
@@ -31,16 +32,18 @@ class SubstitutionService:
     def delete_substitutions(self, substitutions: list[dict]) -> dict:
         return self.substitution_repo.delete_bulk(substitutions)
 
-    def list_substitutions(self) -> list[dict]:
-        return self.substitution_repo.list_all()
-
-    def find_substitutions(self, ingredients: list[str], constraints: dict | None = None) -> dict:
+    def find_substitutions(self, ingredients: list[str] | None = None, constraints: dict | None = None) -> dict:
+        """Rules per source ingredient; without ingredients all rules in the knowledge base."""
         constraints = constraints or {}
-        candidates = self.substitution_repo.find_bulk(ingredients)
-        return {
-            source: self._filter_candidates(rows, constraints)
-            for source, rows in candidates.items()
-        }
+        if ingredients is None:
+            candidates = {}
+            for row in self.substitution_repo.list_all():
+                candidates.setdefault(row["source_ingredient"], []).append(row)
+        else:
+            candidates = self.substitution_repo.find_bulk(ingredients)
+        found = {source: self._filter_candidates(rows, constraints) for source, rows in candidates.items()}
+        # An asked-for ingredient without rules stays in the result; in the full list it says nothing.
+        return found if ingredients is not None else without_empty(found)
 
     def adapt_recipes(self, mealdb_ids: list[str], constraints: dict | None = None, compact: bool | None = None) -> dict:
         constraints = constraints or {}
@@ -69,15 +72,13 @@ class SubstitutionService:
                 ingredient_result = {
                     "position": ingredient.position,
                     "name": ingredient.name,
-                    "normalized_name": ingredient.normalized_name,
                     "measure": ingredient.measure,
                     "estimated_grams": ingredient.estimated_grams,
                 }
 
                 if selected is not None:
+                    # Source, reason and confidence stand in the recipe's changes, ratio and note in quantity.
                     ingredient_result["name"] = selected["target_ingredient"]
-                    ingredient_result["normalized_name"] = normalize_ingredient_name(selected["target_ingredient"])
-                    ingredient_result["substitution"] = selected
                     nutrition = cached.get(ingredient.normalized_name)
                     quantity = target_quantity(ingredient, selected, nutrition.portions if nutrition else None)
                     ingredient_result["quantity"] = quantity
@@ -96,11 +97,10 @@ class SubstitutionService:
                 elif self._requires_substitution(ingredient.normalized_name, constraints):
                     missing_substitutions.add(ingredient.name)
 
-                adapted_ingredients.append(ingredient_result)
+                adapted_ingredients.append(without_empty(ingredient_result))
 
-            hidden = self._hidden_ingredients(recipe, known_sources)
-            hidden_ingredients.extend(hidden)
-            adapted_recipes.append({
+            hidden_ingredients.extend(self._hidden_ingredients(recipe, known_sources))
+            adapted_recipes.append(without_empty({
                 "source_mealdb_id": recipe.mealdb_id,
                 "source_recipe_name": recipe.name,
                 "name": f"{recipe.name} (adapted)",
@@ -111,8 +111,7 @@ class SubstitutionService:
                 "constraints": constraints,
                 "changes": recipe_changes,
                 "ingredients": adapted_ingredients,
-                "hidden_ingredients": [row for row in hidden],
-            })
+            }))
 
         compact = len(recipes) > COMPACT_ABOVE if compact is None else compact
         if compact:
@@ -122,7 +121,7 @@ class SubstitutionService:
         if missing_recipes or missing_substitutions:
             status = "partial_success" if adapted_recipes else "error"
 
-        return {
+        return without_empty({
             "status": status,
             "compact": compact,
             "recipes_processed": len(recipes),
@@ -137,7 +136,7 @@ class SubstitutionService:
                                "were not replaced. Tell the user; rewrite_instructions or update_recipe_variants can fix them."} if hidden_ingredients else {}),
             **({"compact_note": "Compact form: instructions and image are left out and only names, positions and measures are "
                                 "listed. save_adapted_recipes accepts these items and keeps the original instructions."} if compact else {}),
-        }
+        })
 
     def _known_sources(self, constraints: dict) -> dict[str, str]:
         """Ingredients with a usable substitution for these constraints: source -> best target."""
@@ -164,9 +163,7 @@ class SubstitutionService:
     @staticmethod
     def _compact(item: dict) -> dict:
         result = {key: value for key, value in item.items() if key not in ("instructions", "image_url", "category", "area", "source_recipe_name")}
-        result["ingredients"] = [
-            {key: row[key] for key in ("position", "name", "measure")} for row in item["ingredients"]
-        ]
+        result["ingredients"] = [{key: row[key] for key in ("position", "name", "measure") if key in row} for row in item["ingredients"]]
         return result
 
     @staticmethod

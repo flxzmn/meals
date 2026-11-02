@@ -220,7 +220,7 @@ async def test_per_serving_appears_when_servings_are_known():
     service = NutritionService(session)
     service.usda = FakeUSDA()
     await service.enrich_recipes(["test-1", "test-1-v1"])
-    assert service.get_nutrition(["test-1"])["recipes"][0]["per_serving"] is None
+    assert "per_serving" not in service.get_nutrition(["test-1"])["recipes"][0]
 
     ServingService(session).set_servings([{"mealdb_id": "test-1", "servings": 2}])
     original = service.get_nutrition(["test-1"])["recipes"][0]
@@ -253,7 +253,7 @@ async def test_calculate_with_servings():
     service.usda = FakeUSDA()
     ingredients = [{"name": "chicken", "measure": "200 g"}]
     assert (await service.calculate(ingredients, 2))["per_serving"]["calories"] == 200.0
-    assert (await service.calculate(ingredients))["per_serving"] is None
+    assert "per_serving" not in await service.calculate(ingredients)
     assert (await service.calculate(ingredients, 0))["status"] == "error"
 
 

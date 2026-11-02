@@ -91,7 +91,7 @@ def test_recipe_adaptation_is_bulk_and_keeps_original():
     assert result["status"] == "success"
     assert result["substitutions_applied"] == 2
     adapted = result["adapted_recipes"][0]
-    assert [item["normalized_name"] for item in adapted["ingredients"]] == ["tempeh", "oat milk"]
+    assert [item["name"] for item in adapted["ingredients"]] == ["tempeh", "oat milk"]
     original = session.query(Recipe).filter_by(mealdb_id="test-1").one()
     assert [item.normalized_name for item in original.ingredients] == ["chicken", "milk"]
 
