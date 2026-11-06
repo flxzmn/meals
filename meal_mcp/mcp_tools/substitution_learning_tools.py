@@ -1,9 +1,9 @@
 from db.db import session_scope
-from mcp_tools.server import mcp
+from mcp_tools.server import READ_ONLY, mcp
 from services.substitution_learning_service import SubstitutionLearningService
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 def suggest_substitutions(
     ingredients: list[str],
     constraints: dict | None = None,
@@ -50,7 +50,7 @@ def reject_substitutions(
         return SubstitutionLearningService(session).reject_substitutions(suggestions, constraints)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 def list_substitution_suggestions(status: str | None = None) -> dict:
     """List suggestions with their decisions and feedback; status: pending, approved or rejected."""
     with session_scope() as session:

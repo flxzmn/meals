@@ -1,5 +1,5 @@
 from db.db import session_scope
-from mcp_tools.server import mcp
+from mcp_tools.server import READ_ONLY, mcp
 from services.nutrition_service import NutritionService
 
 
@@ -11,7 +11,7 @@ async def enrich_recipes(mealdb_ids: list[str], refresh: bool = False) -> dict:
         return await NutritionService(session).enrich_recipes(mealdb_ids, refresh)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 def get_nutrition(mealdb_ids: list[str], compact: bool | None = None) -> dict:
     """Estimated nutrition of saved recipes (enrich_recipes first; ingredients without data are not counted).
 
@@ -22,7 +22,7 @@ def get_nutrition(mealdb_ids: list[str], compact: bool | None = None) -> dict:
         return NutritionService(session).get_nutrition(mealdb_ids, compact)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 async def calculate_nutrition(ingredients: list[dict], servings: int | None = None) -> dict:
     """Nutrition of free ingredients without a saved recipe: [{name, measure}], e.g.
     [{"name": "Hähnchen", "measure": "500 g"}]. Same matching as recipes; English names match more

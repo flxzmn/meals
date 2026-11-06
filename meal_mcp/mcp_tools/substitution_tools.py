@@ -1,5 +1,5 @@
 from db.db import session_scope
-from mcp_tools.server import mcp
+from mcp_tools.server import DESTRUCTIVE, READ_ONLY, mcp
 from services.substitution_service import SubstitutionService
 
 
@@ -12,7 +12,7 @@ def add_substitutions(substitutions: list[dict]) -> dict:
         return SubstitutionService(session).add_substitutions(substitutions)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 def find_substitutions(ingredients: list[str] | None = None, constraints: dict | None = None) -> dict:
     """Substitution rules per source ingredient, optionally filtered by constraints. Without ingredients,
     all rules in the knowledge base."""
@@ -20,14 +20,14 @@ def find_substitutions(ingredients: list[str] | None = None, constraints: dict |
         return SubstitutionService(session).find_substitutions(ingredients, constraints)
 
 
-@mcp.tool()
+@mcp.tool(annotations=DESTRUCTIVE)
 def delete_substitutions(substitutions: list[dict]) -> dict:
     """Delete substitutions: [{source_ingredient, target_ingredient}]."""
     with session_scope() as session:
         return SubstitutionService(session).delete_substitutions(substitutions)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 def adapt_recipes(mealdb_ids: list[str], constraints: dict | None = None, compact: bool | None = None) -> dict:
     """Adapt saved recipes with the substitution rules. Nothing is stored: pass items of adapted_recipes
     to save_adapted_recipes to keep them.

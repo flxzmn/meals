@@ -1,0 +1,16 @@
+# Only what the Dockerfile copies; above all no .env (the key comes in at run time) and no database.
+.env
+.venv/
+.vscode/
+.git/
+.pytest_cache/
+**/__pycache__/
+*.py[cod]
+*.db
+*.mcpb
+build/
+dist/
+docs/
+evals/
+scripts/
+tests/

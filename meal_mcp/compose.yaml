@@ -1,0 +1,29 @@
+# Meal MCP for one user (docs/DOCKER.md).
+#   docker compose up --build                    server on http://localhost:8000<path>
+#   docker compose --profile tunnel up --build   plus a public cloudflared address, e.g. for ChatGPT
+# USDA_API_KEY and MEAL_HTTP_PATH come from .env next to this file.
+services:
+  meal:
+    build: .
+    environment:
+      USDA_API_KEY: ${USDA_API_KEY:?USDA_API_KEY fehlt in .env}
+      MEAL_HTTP_PATH: ${MEAL_HTTP_PATH:?MEAL_HTTP_PATH fehlt in .env, z. B. /<zufall>/mcp}
+      # The tunnel forwards the public host name; "meal" is the name inside the Docker network.
+      MEAL_ALLOWED_HOSTS: "*.trycloudflare.com,meal"
+    ports:
+      # Only this computer; other devices in the network reach the server through the tunnel only.
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - meal-data:/data
+    restart: unless-stopped
+
+  tunnel:
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:2025.10.0
+    command: tunnel --no-autoupdate --url http://meal:8000
+    depends_on:
+      - meal
+    restart: unless-stopped
+
+volumes:
+  meal-data:

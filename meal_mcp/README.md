@@ -30,6 +30,10 @@ Course material and guides (German):
 | [docs/VERSIONEN.md](docs/VERSIONEN.md) | Versions compared |
 | [docs/UEBUNGEN.md](docs/UEBUNGEN.md) | Exercises (draft) |
 | [docs/EVALS.md](docs/EVALS.md) | Evals: which tools Claude chooses for fixed prompts |
+| [docs/CHATGPT.md](docs/CHATGPT.md) | Test in ChatGPT over HTTP and a tunnel (branch chatgpt-http) |
+| [docs/SCHNELLSTART.md](docs/SCHNELLSTART.md) | Short guide: install Docker, start the container, connect ChatGPT, smoke test |
+| [docs/DOCKER.md](docs/DOCKER.md) | Docker image for one user over HTTP, optional tunnel |
+| [docs/MEHRNUTZER.md](docs/MEHRNUTZER.md) | Plan: one server for the whole course (login, data per person) |
 
 ## Setup (Windows PowerShell)
 
