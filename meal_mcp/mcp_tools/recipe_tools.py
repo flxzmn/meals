@@ -1,10 +1,10 @@
 from db.db import session_scope
-from mcp_tools.server import mcp
+from mcp_tools.server import DESTRUCTIVE, READ_ONLY, mcp
 from services.image_service import ImageService
 from services.recipe_service import RecipeService
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 async def search_recipes(queries: list[str]) -> dict:
     """Search TheMealDB for several recipe queries in one tool call."""
     with session_scope() as session:
@@ -18,7 +18,7 @@ async def save_recipes(mealdb_ids: list[str]) -> dict:
         return await RecipeService(session).save_recipes(mealdb_ids)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 def list_recipes() -> list[dict]:
     """List all saved recipes and variants. Variants have parent_mealdb_id, constraints and change_count;
     originals list their variant_ids. Empty fields are left out."""
@@ -26,7 +26,7 @@ def list_recipes() -> list[dict]:
         return RecipeService(session).list_recipes()
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 def get_recipes(mealdb_ids: list[str], compact: bool | None = None) -> dict:
     """Return saved recipes or variants with ingredients, instructions and, for variants, constraints and
     changes. Above 5 recipes compact (no instructions, image or changes); compact=false forces detail."""
@@ -43,7 +43,7 @@ async def download_recipe_images(mealdb_ids: list[str], size: str = "medium", fo
         return await ImageService(session).download(mealdb_ids, size, folder)
 
 
-@mcp.tool()
+@mcp.tool(annotations=DESTRUCTIVE)
 def delete_recipes(mealdb_ids: list[str]) -> dict:
     """Delete several locally saved recipes or variants. Deleting an original also deletes its variants."""
     with session_scope() as session:

@@ -1,5 +1,5 @@
 from db.db import session_scope
-from mcp_tools.server import mcp
+from mcp_tools.server import READ_ONLY, mcp
 from services.serving_service import ServingService
 
 
@@ -11,7 +11,7 @@ def set_recipe_servings(recipes: list[dict]) -> dict:
         return ServingService(session).set_servings(recipes)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 def scale_recipes(recipes: list[dict]) -> dict:
     """Show amounts for another number of servings: [{mealdb_id, servings}]. Needs known servings;
     nothing is saved (save_adapted_recipes keeps it as a variant)."""

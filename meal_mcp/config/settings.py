@@ -41,6 +41,16 @@ class Settings(BaseSettings):
     # Some clients give up on a tool call after 60 s. enrich_recipes stops in time and can be called again.
     enrich_time_budget_seconds: float = 40.0
     log_level: str = "INFO"
+    # Claude Desktop starts the server over stdio. "http" serves it on 127.0.0.1 for clients such as
+    # ChatGPT, which only reach a server through a public HTTPS address (a tunnel to this port).
+    meal_transport: str = "stdio"
+    # Only this computer by default; the Docker image sets 0.0.0.0, Docker then decides who reaches the port.
+    meal_http_host: str = "127.0.0.1"
+    meal_http_port: int = 8000
+    # A hard-to-guess path keeps strangers out as long as there is no login.
+    meal_http_path: str = "/mcp"
+    # Host names a tunnel forwards, comma-separated, e.g. "*.trycloudflare.com".
+    meal_allowed_hosts: str = ""
 
     def model_post_init(self, __context) -> None:
         if not self.database_url:

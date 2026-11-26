@@ -1,9 +1,9 @@
 from db.db import session_scope
-from mcp_tools.server import mcp
+from mcp_tools.server import READ_ONLY, mcp
 from services.match_service import MatchService
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 async def search_usda_foods(queries: list[str]) -> dict:
     """Search USDA foods for several terms: fdc_id, description and nutrients per 100 g, to pick a
     match for set_ingredient_matches."""
@@ -27,7 +27,7 @@ async def reject_ingredient_matches(rejections: list[dict]) -> dict:
         return await MatchService(session).reject_matches(rejections)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 def list_ingredient_matches(ingredients: list[str] | None = None) -> list[dict]:
     """USDA matches of ingredients with source (auto or manual), rejected foods and notes; without
     ingredients all of them."""

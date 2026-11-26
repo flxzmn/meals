@@ -21,5 +21,9 @@ class ToolCallLog(Middleware):
         return result
 
 
+# Hints for the client: ChatGPT asks the user to confirm every tool not marked read-only.
+READ_ONLY = {"readOnlyHint": True}
+DESTRUCTIVE = {"readOnlyHint": False, "destructiveHint": True}
+
 mcp = FastMCP(name="Recipe MCP", instructions="Search, save, enrich and analyze recipes in bulk.")
 mcp.add_middleware(ToolCallLog())
